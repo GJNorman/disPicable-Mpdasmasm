@@ -85,9 +85,9 @@ It does not have support for the extended IS or triple word instructions (i.e. M
 
 #### DB 
 
-- label    DB "hello"
+  label    DB "hello"
 
-           DB 'World'
+  DB "World\0"
 
 if you want a null terminator, you need to include it in the string itself as "World\0"
 
@@ -111,4 +111,8 @@ you will need to include a header file from the relevant microcontroller
 
 MyVar  equ    0x100
 
+#### Comments
 
+The program supports inline comments using either ';' or '//'
+
+and supports multiline comments using /*  */ 
