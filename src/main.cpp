@@ -18,14 +18,8 @@
 #include "Timer.h"
 #include <filesystem>
 
-
 #ifdef _WIN32
 #include<malloc.h>
-const char *Global_working_directory = "C:/Users/Administrator/Desktop/Assembler/Assembler";
-#endif
-
-#ifdef __APPLE__
-const char *Global_working_directory ="/Users/gregnorman/Desktop/annoyed";
 #endif
 
 void compare_generated_and_original_hex_files(const char *OrignialFileDir,const char *GeneratedFileDir);
@@ -66,6 +60,7 @@ void selectFile(uint32_t &file_selector,std::vector<std::string> &fileList)
 // search through current directory, grab files with certain extensions
 void getFileLists()
 {
+    
     std::cout << "Current path is " << std::filesystem::current_path() << '\n';
     const std::filesystem::path path{Global_working_directory}; // (3)};
     for (auto const& dir_entry : std::filesystem::directory_iterator{ path })
