@@ -58,5 +58,50 @@ Note - while we lost the symbolic label for the table pointer, we retained the B
 
 
 
+### supported operations
+
+#### Number systems
+
+ - Hex notation is supported, examples 0x37, h'37
+
+ - decimal notation is supported, examples 0d37, d'37
+ 
+ - binary notaiton is supported, examples 0b1101, b'1101
+
+#### ORG directive
+
+- any number of ORG directives can be placed into the Program as so 'ORG 0x10f5'
+
+#### Lables
+
+- lables must appear on a line by themselves and contain a colon. There are no other limitations
+
+#### DB 
+
+- label    DB "hello"
+
+           DB 'World'
+
+if you want a null terminator, you need to include it in the string itself as "World\0"
+
+this is intended to make formatting easier, when trying to store a large amount of ascii data
+
+#### Preprocessor
+
+limited support for C-Style Macros
+
+#define SUM(x,y)  MOVFW x, BANKSEL(x)\
+ 
+                  ADDFW y, f, BANKSEL(y)
+
+including files
+
+you will need to include a header file from the relevant microcontroller
+
+#include 'pic18xyz.inc'
+
+#### EQU
+
+MyVar  equ    0x100
 
 
