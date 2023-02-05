@@ -60,6 +60,13 @@ Note - while we lost the symbolic label for the table pointer, we retained the B
 
 ### supported operations
 
+#### Instruction set
+
+The program is compatible with all 75 PIC18 single and souble word instructions; including with optional arguments. 
+
+It does not have support for the extended IS or triple word instructions (i.e. MOVFFL)
+
+
 #### Number systems
 
  - Hex notation is supported, examples 0x37, h'37
