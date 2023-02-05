@@ -1,6 +1,8 @@
 # disPicable-Mpdasmasm
 A disassembler / Assembler for Pic18 microcontrollers
 
+The name is light-hearted; 'disPicable' meaning its a disassembler for PIC MCUs, 'Mpdasmasm' meaning Microchip Disassembler-Assembler
+
 The main issue with the MPLAB diassembler, and other projects, is that they do not produce usable code. This is due to a number of reasons
   - Hard coded addresses for branching instructions
   
@@ -22,8 +24,10 @@ The main issue with the MPLAB diassembler, and other projects, is that they do n
   
 ### Some challenges
 
-  - Frequenctly table read address are passed as arguments to functions, which can make tracking them difficult. 
+  - Frequently table read address are passed as arguments to functions, which can make tracking them difficult. 
   It's necessary to do this, so that we can differentiate between data and code
+  
+  - Another issue, is that sometimes a program will read the entire program memory (for example, after an update) for verification, which adds another layer of ambiguity
 
   - I'm trying to limit the amount of hard-coding and external resources needed. currently the program can (optionally) read in a ".inc" file for whatever the target processor is. This file mostly contains information on the chip's SFRs (special function registers), it doesn't really give any information on the chip, only the number of RAM banks and whether EEPROM is present
 ## Where the project currently is
