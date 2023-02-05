@@ -85,21 +85,25 @@ It does not have support for the extended IS or triple word instructions (i.e. M
 
 #### DB 
 
-  label    DB "hello"
+      label    DB "hello"
 
-  DB "World\0"
+               DB "World\0"
+               
+      
 
 if you want a null terminator, you need to include it in the string itself as "World\0"
 
 this is intended to make formatting easier, when trying to store a large amount of ascii data
 
+so if you were to read "label" until TABLAT == 0, you would read "Hello World"
+
 #### Preprocessor
 
 limited support for C-Style Macros
 
-#define SUM(x,y)  MOVFW x, BANKSEL(x)\
+    #define SUM(x,y)  MOVFW x, BANKSEL(x)\
  
-                  ADDFW y, f, BANKSEL(y)
+                     ADDFW y, f, BANKSEL(y)
 
 including files
 
