@@ -10,7 +10,7 @@
 
 
 // for lines that include a ':' character, we read until
-static char *GrabPainInAssData(const char* Assembly_Instruction)
+static char *GrabLabelledData(const char* Assembly_Instruction)
 {
     size_t p1 =(strstr(Assembly_Instruction,":")-Assembly_Instruction)+1;
     size_t p2 = strlen(Assembly_Instruction);
@@ -54,7 +54,7 @@ void assemble_non_program_data(uint16_t REG_VALUE, const char *Assembly_Instruct
     else
         output_Machine_Code("\r\n:0200000400%.2X%.2X",REG_VALUE,(1+(~check_sum)) & 0xff);
 
-    char *temp = GrabPainInAssData(Assembly_Instruction);
+    char *temp = GrabLabelledData(Assembly_Instruction);
     
     check_sum=0;
     for(size_t counter=0; counter<strlen(temp);counter+=2)
@@ -101,7 +101,7 @@ void assemble_EEPROM_data(uint16_t EEPROM_START_ADD_U16, const char *Assembly_In
     }
 
 
-    char *temp = GrabPainInAssData(Assembly_Instruction);
+    char *temp = GrabLabelledData(Assembly_Instruction);
     
     uint16_t check_sum =0;
     for(size_t counter=0; counter<strlen(temp);counter+=2)
