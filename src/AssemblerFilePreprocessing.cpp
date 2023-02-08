@@ -1,6 +1,6 @@
 //
 //  AssemblerFilePreprocessing.cpp
-//  annoyed
+//  
 //
 //  Created by Greg Norman on 27/1/2023.
 //
@@ -235,7 +235,7 @@ void find_define_byte_tags(Converted_Assembly_Code &Machine_Code_File,std::strin
 {
 
     size_t p1 =  CheckForLeadingSpaces(line.c_str(),0);
-    
+
     size_t p2 = FindNextSpaceCharacter(line, p1) ;
     
     if(line[p2] == ':') // colon is optional and not used when calling label
@@ -243,16 +243,16 @@ void find_define_byte_tags(Converted_Assembly_Code &Machine_Code_File,std::strin
         p2--;
     }
 
-    
     if(address_offset==2)
     {
         address_offset=1;
     }
 
+    // save the label and address
     Instruction_Set.Define_Byte_Tags.push_back(line.substr(p1,p2-p1));
     Instruction_Set.Define_byte_tag_positions.push_back(File_Position_Counter-address_offset);
     
-    //printf("%.4X\t%.4X\t '%s'\n",File_Position_Counter,File_Position_Counter-address_offset,line.substr(p1,p2-p1));
+    //printf("%.4X\t%.4X\t '%s'\n",File_Position_Counter,File_Position_Counter-address_offset,line.substr(p1,p2-p1).c_str());
         
 }
 
@@ -281,8 +281,12 @@ void Convert_Databyte_into_hex_data(std::string line,std::string next_line,Conve
             starting_position_in_db++;
             borrowed_byte_from_next_line=false;
         }
+        
         find_define_byte_tags(Machine_Code_File,line,File_Position_Counter,Instruction_Set,starting_position_in_db);
+        
         uint8_t original_string_length = strlen(data_bytes);        //There might be null characters before the end of the string
+        
+        
         for(uint8_t counter=starting_position_in_db; counter < original_string_length; )
         {
             check_for_escape_characters(counter,data_bytes);

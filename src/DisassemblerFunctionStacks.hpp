@@ -1,6 +1,6 @@
 //
 //  DisassemblerFunctionStacks.hpp
-//  annoyed
+//  
 //
 //  Created by Greg Norman on 3/2/2023.
 //
@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include "AssemblerFilePreprocessing.hpp"
+#include "EQUs.hpp"
 typedef struct{
     uint8_t type;               // int, register etc.
     uint16_t value;

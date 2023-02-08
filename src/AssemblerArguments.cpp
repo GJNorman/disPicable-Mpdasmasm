@@ -1,6 +1,6 @@
 //
 //  AssemblerArguments.cpp
-//  annoyed
+//  
 //
 //  Created by Greg Norman on 28/1/2023.
 //
@@ -26,7 +26,7 @@ void initNumberSystemDecoder_t()
 {
     addNewBase(16,"0x",true);   // 0x37
     addNewBase(16,"h'",true);   // h'37
-    addNewBase(16,"h",false);   // 37h
+   // addNewBase(16,"h",false);   // 37h
     
     addNewBase(10,"0d",true);   // 0d37
     addNewBase(10,"d'",true);   // d'37
@@ -274,46 +274,66 @@ uint32_t convert_FSR_for_assembler(const char *SFR_REG,PIC18F_FULL_IS & Instruct
     size_t p1=CheckForLeadingSpaces(SFR_REG,0);
     
     // check for the end of the word/line
-    //size_t p2 = FindNextSpaceCharacter(SFR_REG,p1+1);
+   // size_t p2 = FindNextSpaceCharacter(SFR_REG,p1+1);
        
     //p2--;
 
     uint32_t f=0;
-   // uint16_t counter=0;
+    uint16_t counter=0;
 
-   /* if((SFR_REG[p1] == 'h')||(SFR_REG[p1] == 'l'))
+    // if a 'high()' or 'low()' directive has been used, we will find it here
+    bool high = true;
+    const char *HIGH_LOW_DIRECTIVE = strstr(SFR_REG,"high(");
+    
+    if(HIGH_LOW_DIRECTIVE == NULL)
+    {
+        HIGH_LOW_DIRECTIVE = strstr(SFR_REG,"low(");
+        if(HIGH_LOW_DIRECTIVE!=NULL)
+        {
+            HIGH_LOW_DIRECTIVE = &HIGH_LOW_DIRECTIVE[strlen("low(")];
+        }
+        high = false;
+    }
+    else
+    {
+        HIGH_LOW_DIRECTIVE = &HIGH_LOW_DIRECTIVE[strlen("high(")];
+    }
+    if(HIGH_LOW_DIRECTIVE != NULL)
     {
         uint8_t bitshift_value = 0;
-        char search_term_db[2] ="l";
-        if(SFR_REG[p1]== 'h')
+    
+        const char *end = strstr(HIGH_LOW_DIRECTIVE, ")");
+    
+        if(end!=NULL)
         {
-            snprintf(search_term_db,2,"h");
-            bitshift_value=8;
-        }
-        //if we made it here, then we couldn't find the SFR, so we'll check if its a tag for a DB
-        for( counter =0; counter < Instruction_Set.Define_Byte_Tags.size();counter++)
-        {
-            size_t sec2_len =strlen(Instruction_Set.Define_Byte_Tags[counter].c_str())+strlen(search_term_db)+ strlen("  ");
-            
-            char security2 [sec2_len + 1];
-            
-            snprintf(security2,sec2_len,"%s%s",search_term_db,Instruction_Set.Define_Byte_Tags[counter].c_str());
-
-            
-            if(strlen(&SFR_REG[p1]) == strlen(security2))
+            if(high == true)
             {
-                if(strncasecmp(&SFR_REG[p1],security2,strlen(&SFR_REG[p1]))==0)
+                bitshift_value=8;
+            }
+    
+            size_t search_term_size =end-HIGH_LOW_DIRECTIVE ;
+            char search_term_db[search_term_size + 1];
+            
+            snprintf(search_term_db,search_term_size+1, "%s",HIGH_LOW_DIRECTIVE);
+            std::cout<<search_term_db<<"\n";
+            // we'll check if its a tag for a DB
+            for( counter =0; counter < Instruction_Set.Define_Byte_Tags.size();counter++)
+            {
+                if(strlen(search_term_db) == (Instruction_Set.Define_Byte_Tags[counter].size()))
                 {
-                    f = (Instruction_Set.Define_byte_tag_positions[counter]>>bitshift_value)&0xff;
-                    
-                    return f;
+                    if(strncasecmp(search_term_db,Instruction_Set.Define_Byte_Tags[counter].c_str(),strlen(&SFR_REG[p1]))==0)
+                    {
+                        f = (Instruction_Set.Define_byte_tag_positions[counter]>>bitshift_value)&0xff;
+                        
+                        return f;
+                    }
                 }
             }
         }
         //no point continuing if there was no match found
-        printf ("Unable to identify db tag '%.*s' \n",(int)p2,&SFR_REG[p1]);
+        printf ("Unable to identify db tag '%.s' \n",&SFR_REG[p1]);
         return f;
-    }*/
+    }
     // compare to the list of MCU registers and user variables
     //counter =0 ;
     

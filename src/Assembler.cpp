@@ -13,9 +13,6 @@ TimerClass MyTimer(0);                                          // for benchmark
 Converted_Assembly_Code AssemblyCode;                           // stores Assembly program
 
 
-
-
-
 void Assemble(const char *inputfiledir, bool bDisplayBinContents,bool bDisplayAssembly,PIC18F_FULL_IS &Instruction_Set)
 {
     MyTimer.updateTimerReference();
@@ -83,6 +80,8 @@ void Assemble(const char *inputfiledir, bool bDisplayBinContents,bool bDisplayAs
         
         
     }
+    padFile(address,check_sum);
+
     //End of FILE
     output_Machine_Code("%s","\r\n:00000001FF\r\n");
     
@@ -98,6 +97,8 @@ void assemble_UnknownOrDB(uint16_t value,uint16_t address_upper_16bits, uint32_t
     {
         output_Machine_Code("%.2X%.2X",value&0xff,(value>>8)&0xff);
     }
+    
+    // we are at the end of the current line
     else
     {
         if(check_sum_required==true)
@@ -121,7 +122,6 @@ void assemble_UnknownOrDB(uint16_t value,uint16_t address_upper_16bits, uint32_t
 }
 void  assemble_DB(std::string Assembly_Instruction,uint16_t address_upper_16bits, uint32_t &address, uint16_t &check_sum,bool &check_sum_required,PIC18F_FULL_IS &Instruction_Set)
 {
-    std::cout << Assembly_Instruction << "\n";
     // [optional label]  DB  'x','y'
     //                   DB  "asdasd"
     
@@ -129,6 +129,8 @@ void  assemble_DB(std::string Assembly_Instruction,uint16_t address_upper_16bits
     
     size_t nextComma = 0;
     do{
+        
+        // data could be bounded by either ' or "
         size_t startBracket = Assembly_Instruction.find("'",nextComma);  // bounded by '
         size_t endBracket = 0;
         if(startBracket == std::string::npos)
@@ -155,6 +157,7 @@ void  assemble_DB(std::string Assembly_Instruction,uint16_t address_upper_16bits
             assemble_UnknownOrDB(value[index], address_upper_16bits, address, check_sum, check_sum_required, Instruction_Set );
         }
         nextComma = Assembly_Instruction.find(",",nextComma+1);
+        
     }while( nextComma != std::string::npos );
     
    
@@ -224,8 +227,7 @@ bool processInstruction(std::string &Assembly_Instruction,      // current line 
     {
         if(strcasecmp(Instruction_Set.PIC18F_MNEMONICS[pos].c_str(),command.c_str())==0)
         {
-            
-            
+    
             instruction_found=true;
             char header[45]="";
             

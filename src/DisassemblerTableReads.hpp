@@ -1,6 +1,6 @@
 //
 //  DisassemblerTableReads.hpp
-//  annoyed
+//  
 //
 //  Created by Greg Norman on 2/2/2023.
 //
@@ -11,6 +11,10 @@
 #include <iostream>
 #include "PIC18_IS.h"
 #include "AssemblerFilePreprocessing.hpp"
+#include "DisassemblerModifyByAddress.hpp"  // for adding ascii data at the address pointed to by the TBLPTR
+
+
+void markAllAsciiData(Converted_Assembly_Code &OutputAssemblyCode);
 
 // add a comment indicating the data stored at the address targeted by a tblrd
 void markTableReads(Converted_Assembly_Code &OutputAssemblyCode,PIC18F_FULL_IS &Instruction_Set);

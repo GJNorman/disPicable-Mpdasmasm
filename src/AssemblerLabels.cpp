@@ -1,6 +1,6 @@
 //
 //  AssemblerLabels.cpp
-//  annoyed
+//  
 //
 //  Created by Greg Norman on 27/1/2023.
 //
@@ -112,20 +112,19 @@ char *convert_label(const char *Label_instruction, uint32_t address, size_t star
 void ConvertLabelToAddress(std::string &Assembly_Instruction,uint32_t address)
 {
     bool CALL_USES_EXTERNAL_MEM = false;    // memory in external chip
-    if(strstr(Assembly_Instruction.c_str(),"//External Memory"))
+    if(strstr(Assembly_Instruction.c_str(),"External Memory"))
     {
         CALL_USES_EXTERNAL_MEM = true;
     }
     
     //this is the label being called from the branch command
     
-    //if((strstr(Assembly_Instruction.c_str()," LABEL")))
-    {
-        char *temp = translate_label_to_mem_address(Assembly_Instruction.c_str(),CALL_USES_EXTERNAL_MEM,address);
+    
+    char *temp = translate_label_to_mem_address(Assembly_Instruction.c_str(),CALL_USES_EXTERNAL_MEM,address);
 
-        Assembly_Instruction.resize(strlen(temp)+1);
-        Assembly_Instruction = temp;
-        free(temp);
-    }
+    Assembly_Instruction.resize(strlen(temp)+1);
+    Assembly_Instruction = temp;
+    free(temp);
+
 }
 

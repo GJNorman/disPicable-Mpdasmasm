@@ -1,6 +1,6 @@
 //
 //  Assembler.hpp
-//  annoyed
+//  
 //
 //  Created by Greg Norman on 27/1/2023.
 //
@@ -23,7 +23,6 @@
 #include "AssembleDoubleWord.hpp"
 #include "AssembleDirectives.hpp"
 #include "AssemblerMachineCodeWriter.hpp"
-
 #include "Timer.h"
 
 void Assemble(const char *inputfiledir, bool bDisplayBinContents,bool bDisplayAssembly,PIC18F_FULL_IS &Instruction_Set);

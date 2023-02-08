@@ -1,6 +1,6 @@
 //
 //  EQUs.cpp
-//  annoyed
+//  
 //
 //  Created by Greg Norman on 2/2/2023.
 //
@@ -9,7 +9,12 @@
 
 // holds all of the EQU variables defined by the user files
 static std::vector<EQU_list_t> EQU_List;
+std::string MostRecentEQU;                  // the last EQU found in the list from either the disassembler or assembler
 
+std::string getMostRecentEQU()
+{
+    return MostRecentEQU;
+}
 void clearEQU()
 {
     EQU_List.clear();
@@ -101,17 +106,16 @@ void addNewEQU(std::string Assembly_Instruction)
     }
 }
 
+
 // take a register address from a "FILE" command and return the associated "EQU"
 std::string processEQUforDisassembler(uint32_t regAddress, uint32_t mask)
 {
-    std::string RegName;
-    
+
     char temp[10] = "";
     
     snprintf(temp,sizeof(temp),"0x%x",regAddress&mask);
     
-    RegName.resize(strlen(temp)+1);
-    RegName = temp;
+    MostRecentEQU = temp;
     
     for(auto Equis: EQU_List)
     {
@@ -122,13 +126,13 @@ std::string processEQUforDisassembler(uint32_t regAddress, uint32_t mask)
             // header file bit fields indicated by underscores
             if(Equis.Tag.find("_")==std::string::npos)
             {
-                RegName = Equis.Tag;
+                MostRecentEQU = Equis.Tag;
                 break;
             }
         }
     }
     
-    return RegName;
+    return MostRecentEQU;
 }
 // take a variable name and return the address
 uint32_t processEQUforAssembler(std::string &RegisterName)

@@ -1,6 +1,6 @@
 //
 //  BasicFileEditing.hpp
-//  annoyed
+//  
 //
 //  Created by Greg Norman on 27/1/2023.
 //
@@ -22,7 +22,7 @@ bool check_if_line_is_empty(std::string line_from_file);
 
 bool  check_data_bytes(char &data);
 void check_for_escape_characters(uint8_t &counter, char *&data_bytes);
-char *removeEscapeCharacter(char character);
+void removeEscapeCharacter(char character, char* dst, size_t dst_size);
 /*
  
  for finding substrings

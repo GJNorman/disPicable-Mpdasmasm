@@ -1,6 +1,6 @@
 //
 //  PIC18_IS.h
-//  annoyed
+//  
 //
 //  Created by Greg Norman on 26/1/2023.
 //
@@ -148,6 +148,8 @@ public:
     std::vector<uint32_t> Define_byte_tag_positions;
     std::string MCU;
 
+    // the mcu_type contains the name of the header file
+    // we record this so that it can be included into the disassembled file
     void SetupRegisterNames(const char MCU_TYPE[])
     {
         std::cout << MCU_TYPE << " Selected - ";

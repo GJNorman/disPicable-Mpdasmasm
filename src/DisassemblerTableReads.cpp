@@ -1,45 +1,61 @@
 //
 //  DisassemblerTableReads.cpp
-//  annoyed
+//  
 //
 //  Created by Greg Norman on 2/2/2023.
 //
 
 #include "DisassemblerTableReads.hpp"
 
+std::vector<std::string> TableReadData;
+std::vector<uint64_t> TableReadAddress;
 
-
+void markAllAsciiData(Converted_Assembly_Code &OutputAssemblyCode)
+{
+    modifyBasedOnAddress(OutputAssemblyCode, TableReadAddress,TableReadData, false, false);
+}
+void markAsciiData(const char *formatBuffer,uint32_t Address)
+{
+    TableReadData.push_back(formatBuffer);
+    TableReadAddress.push_back(Address);
+}
+// after each TBLRD command add a comment indicating the first character being read
 void markTableReads(Converted_Assembly_Code &OutputAssemblyCode,PIC18F_FULL_IS &Instruction_Set)
 {
-    char formatBuffer[100] ;
+    char formatBuffer[100] ;        // holds the ascii character at the location of the TBLRD command
+   
     // find ascii data used in table reads
-
     for(size_t  it = 0 ; it< OutputAssemblyCode.TBLRD_Target_Addresses.size(); it++)
     {
         if(OutputAssemblyCode.TBLRD_Target_Addresses[it] < OutputAssemblyCode.OPCODES.size())
         {
             if(OutputAssemblyCode.TableReadArgumentType[it] == TABLE_READ_ADDR_t::TableReadTypes::direct)
             {
-                snprintf(formatBuffer, sizeof(formatBuffer), ";address = %.4X, data = '%c' ",OutputAssemblyCode.TBLRD_Target_Addresses[it] ,OutputAssemblyCode.OPCODES[OutputAssemblyCode.TBLRD_Target_Addresses[it]]);
+                char temp[10];
+                
+                removeEscapeCharacter(OutputAssemblyCode.OPCODES[OutputAssemblyCode.TBLRD_Target_Addresses[it]],temp,sizeof(temp));
+                
+                snprintf(formatBuffer, sizeof(formatBuffer), "address = %.4X, data = '%s' ",OutputAssemblyCode.TBLRD_Target_Addresses[it] ,temp);
+                
+                if(OutputAssemblyCode.TBLRD_Target_Addresses[it]!=0)
+                {
+                    markAsciiData(formatBuffer,OutputAssemblyCode.TBLRD_Target_Addresses[it]>>1);
+                }
             }
             else
             {
-                snprintf(formatBuffer, sizeof(formatBuffer), ";Passed as argument?");
+                snprintf(formatBuffer, sizeof(formatBuffer), "Passed as argument?");
             }
         }
         else    // most likely passed as a argument to a function
         {
-            snprintf(formatBuffer, sizeof(formatBuffer), ";Passed as argument? or from external flash");
+            snprintf(formatBuffer, sizeof(formatBuffer), "Passed as argument? or from external flash");
         }
         
-        std::string comment = formatBuffer;
+        // add a comment at the address of the table read command
+        OutputAssemblyCode.Comments.push_back(formatBuffer);
+        OutputAssemblyCode.CommentAddress.push_back(OutputAssemblyCode.AddressOfTableReadCommand[it]);
         
-        while(OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM[OutputAssemblyCode.AddressOfTableReadCommand[it]].size() < 52)
-        {
-            const char *Space =  " ";
-            OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM[OutputAssemblyCode.AddressOfTableReadCommand[it]] += Space;
-        }
-        OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM[OutputAssemblyCode.AddressOfTableReadCommand[it]] += (comment);
     }
 }
 

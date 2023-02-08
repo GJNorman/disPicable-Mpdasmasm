@@ -1,13 +1,11 @@
 //
 //  Disassembler.cpp
-//  annoyed
+//  
 //
 //  Created by Greg Norman on 27/1/2023.
 //
 
 #include "Disassembler.hpp"
-
-const char Assembly_Comment_Marker = ';';
 extern const char *Global_working_directory;
 TimerClass MyTimerDissassembler;
 
@@ -63,6 +61,11 @@ void WriteAssemblyCodeToFile(Converted_Assembly_Code &OutputAssemblyCode, bool b
         {
             std::cout<< OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM[pos]<<std::endl;
         }
+        else if(bDisplayBinContents)
+        {
+            std::cout<<std::endl;
+        }
+        
         fprintf(fp,"%s\n",OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM[pos].c_str());
         
         if(strstr(OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM[pos].c_str(),"RET"))//RETFIE, RETURN
@@ -78,8 +81,11 @@ void WriteAssemblyCodeToFile(Converted_Assembly_Code &OutputAssemblyCode, bool b
 void Disassemble(std::vector<unsigned char> &OutputFileContents, bool bDisplayBinContents,bool bDisplayAssembly,PIC18F_FULL_IS &Instruction_Set)
 {
     MyTimerDissassembler.updateTimerReference();
+    
     Converted_Assembly_Code OutputAssemblyCode;
+    
     clearEQU();
+    
     ReadMCUHeader(Instruction_Set);
     
     for(uint64_t file_pos=0; file_pos < OutputFileContents.size() ; )
@@ -98,14 +104,12 @@ void Disassemble(std::vector<unsigned char> &OutputFileContents, bool bDisplayBi
             file_pos++;
         }
     }
-    std::cout << MyTimerDissassembler.CheckDuration() << "  seconds\n";
-    MyTimerDissassembler.updateTimerReference();
-    
     markTableReads(OutputAssemblyCode,Instruction_Set);
 
     AddAllComments(OutputAssemblyCode);
     
-    // add labels
+    markAllAsciiData(OutputAssemblyCode);
+    
     addLabelsToAssemblyCode(OutputAssemblyCode);
 
     WriteAssemblyCodeToFile(OutputAssemblyCode,bDisplayBinContents, bDisplayAssembly,Instruction_Set);
@@ -292,14 +296,12 @@ void generate_asm(std::vector<uint8_t> &MachineCode,
                         //ascii data will alias as NOP instructions, so only "FFFF" is treated as NOP
                         if(strcmp(temp,"FFFF")==0)
                         {
-                            strcat(command_for_prompt,"NOP");
+                            snprintf(&command_for_prompt[strlen(command_for_prompt)], command_for_prompt_len_max-strlen(command_for_prompt),"NOP");
                         }
                         //Everything else becomes "unknown" so that no information is lost
                         else
                         {
-                            strcat(command_for_prompt,"UNKNOWN[");
-                            strcat(command_for_prompt,temp);
-                            strcat(command_for_prompt,"]");
+                            snprintf(&command_for_prompt[strlen(command_for_prompt)], command_for_prompt_len_max-strlen(command_for_prompt), "UNKNOWN[%s]",temp);
                         }
                         break;
                     case PIC18F_NO_ARGS:
@@ -324,13 +326,13 @@ void generate_asm(std::vector<uint8_t> &MachineCode,
             OutputAssemblyCode.Address.push_back(command_for_prompt);
             uint8_t upperByte = 0xff&(n>>8);
             uint8_t lowerByte = n & 0xff;
-            char *UPPER =removeEscapeCharacter(upperByte);
-            char *LOWER =removeEscapeCharacter(lowerByte);
+            char UPPER[10];
+            char LOWER[10];
+            removeEscapeCharacter(upperByte,UPPER,sizeof(UPPER));
+            removeEscapeCharacter(lowerByte,LOWER,sizeof(LOWER));
             snprintf(command_for_prompt,command_for_prompt_len_max,"    DB \"%s\"\n    DB \"%s\"",UPPER,LOWER);
             OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM.push_back(command_for_prompt);
-            
-            free(UPPER);
-            free(LOWER);
+
         }
     }
     free(command_for_prompt);
@@ -352,8 +354,15 @@ void finalise_command(char *&command_for_prompt,
     
     trackTableReads(command_for_prompt,OutputAssemblyCode,n);
     watchFunctionStacks(command_for_prompt,OutputAssemblyCode);
-    //00007efa    EF6E    GOTO 0x719a
-    //12345678901234567890
+    /*
+     optionally add comments explaining what each command does
+     */
+
+    if(include_comments==true)
+    {
+        OutputAssemblyCode.CommentAddress.push_back((uint32_t)OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM.size());
+        OutputAssemblyCode.Comments.push_back(Description);
+    }
     uint8_t index =0 ;
     const std::vector<std::string> instructionList = {"GOTO","BC","BN","BNN","BNC","BNOV","BNZ","BOV","BRA","BZ","CALL","RCALL"};
     
@@ -363,68 +372,10 @@ void finalise_command(char *&command_for_prompt,
     {
         const char *Branching_Command = instructionList[index].c_str();
         
-        //find the position to move to
-        size_t p1 = (strstr(command_for_prompt,Branching_Command)-command_for_prompt)+strlen(Branching_Command);
-        size_t p2 = strlen(command_for_prompt);
-        size_t x = (strstr(command_for_prompt,"x")-command_for_prompt)+1;//mem address
-
-        char *nextComma = strstr(&command_for_prompt[p1],",");
-        
-        if(nextComma!=NULL)
-        {
-            p2 = nextComma-command_for_prompt;
-        }
-
-        char *pre_label = copy_out_substring(end_of_meta_data,p1,command_for_prompt);
-
-        char *label_address = copy_out_substring(x-strlen("0x"),p2,command_for_prompt);
-
-        char *comment = copy_out_substring(p2,strlen(command_for_prompt),command_for_prompt);
-
-        char *Addr= copy_out_substring(x,p2,command_for_prompt);
-
-        OutputAssemblyCode.LABEL_POSITIONS.push_back(strtol(Addr, NULL, 16)/2);
-
-        size_t label_len = strlen(label_address)+strlen(" LABEL_:")+strlen(command_for_prompt)+100;
-        char label[label_len+1];
-        
-        snprintf(label,label_len,"%s LABEL_%s %s",pre_label,label_address,comment);
-
-        //the label may be refering to external memory
-        if((unsigned)strtol(label_address,NULL,16)>device_mem_size)
-        {
-            snprintf(label,label_len,"%sLABEL_%s %s//External Memory",pre_label,label_address,comment);
-            std::cout <<"Address (" << label_address  << ") Exceeds Internal Storage (" << device_mem_size << ")\n";
-        }
-
-        /*
-         optionally add comments explaining what each command does
-         */
-        if(include_comments==true)
-        {
-            OutputAssemblyCode.CommentAddress.push_back((uint32_t)OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM.size());
-            OutputAssemblyCode.Comments.push_back(Description);
-        }
-        OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM.push_back(label);
-
-        strtok(label_address," ");
-        snprintf(label,label_len,"LABEL_0x%.4X:",(unsigned)strtol(label_address,NULL,16));
-        OutputAssemblyCode.LABEL_STRINGS.push_back(label);
-
-        //free(Branching_Command);
-        free(label_address);
-        free(comment);
-        free(Addr);
-        free(pre_label);
+        addLabeltoBranchingInstruction(OutputAssemblyCode,command_for_prompt, Branching_Command,  device_mem_size,end_of_meta_data);
     }
     else
     {
-        if(include_comments==true)
-        {
-            OutputAssemblyCode.CommentAddress.push_back((uint32_t)OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM.size());
-            OutputAssemblyCode.Comments.push_back(Description);
-        }
-
         char *temp =copy_out_substring(end_of_meta_data,strlen(command_for_prompt),command_for_prompt);
 
         OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM.push_back(temp);

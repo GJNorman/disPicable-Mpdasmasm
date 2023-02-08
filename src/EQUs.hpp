@@ -1,6 +1,6 @@
 //
 //  EQUs.hpp
-//  annoyed
+//  
 //
 //  Created by Greg Norman on 2/2/2023.
 //
@@ -26,6 +26,8 @@ enum EQU_Types{
     EQU_bf=0,
     EQU_Reg=1,
 };
+// grab the previously found equ
+std::string getMostRecentEQU();
 
 // reset vector
 void clearEQU();

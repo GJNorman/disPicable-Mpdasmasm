@@ -1,6 +1,6 @@
 //
 //  BasicFileEditing.cpp
-//  annoyed
+//  
 //
 //  Created by Greg Norman on 27/1/2023.
 //
@@ -295,27 +295,25 @@ size_t findWhereCurrentWordBegan(const char* data,size_t currentPos)
 }
 
 
-char *removeEscapeCharacter(char character)
+void removeEscapeCharacter(char character, char* dst, size_t dst_size)
 {
-    char *temp = (char*)malloc(5);
-    
-    temp[0] = character;
     // get rid of escape sequences
     switch(character)
     {
             
-        case '\?':snprintf(temp,sizeof(temp),"(\\?)"); break;
-        case '\a':snprintf(temp,sizeof(temp),"(\\a)"); break;
-        case '\b':snprintf(temp,sizeof(temp),"(\\b)"); break;
-        case '\f':snprintf(temp,sizeof(temp),"(\\f)"); break;
-        case '\n':snprintf(temp,sizeof(temp),"(\\n)"); break;
-        case '\r':snprintf(temp,sizeof(temp),"(\\r)"); break;
-        case '\t':snprintf(temp,sizeof(temp),"(\\t)"); break;
-        case '\v':snprintf(temp,sizeof(temp),"(\\v)"); break;
-        case '\0':snprintf(temp,sizeof(temp),"(\\0)"); break;
+        case '\?':snprintf(dst,dst_size,"\\?"); break;
+        case '\a':snprintf(dst,dst_size,"\\a"); break;
+        case '\b':snprintf(dst,dst_size,"\\b"); break;
+        case '\f':snprintf(dst,dst_size,"\\f"); break;
+        case '\n':snprintf(dst,dst_size,"\\n"); break;
+        case '\r':snprintf(dst,dst_size,"\\r"); break;
+        case '\t':snprintf(dst,dst_size,"\\t"); break;
+        case '\v':snprintf(dst,dst_size,"\\v"); break;
+        case '\0':snprintf(dst,dst_size,"\\0"); break;
         default:
+            dst[0] = character;
             break;
     }
     
-    return temp;
+    return ;
 }

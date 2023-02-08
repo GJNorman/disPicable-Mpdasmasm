@@ -1,6 +1,6 @@
 //
 //  DisassembleSingleword.cpp
-//  annoyed
+//  
 //
 //  Created by Greg Norman on 2/2/2023.
 //
@@ -28,7 +28,7 @@ void disassemble_with_PIC18f_SingleWord(uint16_t MachineCode_byte, PIC18F_FULL_I
     {
         if((CASE_TYPE==PIC18F_FDA_CASE)||(CASE_TYPE==PIC18F_FA_CASE)||(CASE_TYPE==PIC18F_BIT_CASE))
         {
-            if(f>0x5f)
+            if(f>0x5f)  // indicates special function registers
             {
                 f+=0xf00;
                 f = f & 0xffff;
@@ -44,7 +44,7 @@ void disassemble_with_PIC18f_SingleWord(uint16_t MachineCode_byte, PIC18F_FULL_I
     }
     int32_t n =0;
     uint8_t b=0, s=0;
-    char temp[100]="";
+    char temp[100];
     switch(CASE_TYPE)
     {
         case PIC18F_FDA_CASE:
