@@ -70,23 +70,28 @@ void WriteAssemblyCodeToFile(Converted_Assembly_Code &OutputAssemblyCode, bool b
 
 }
 
-void Disassemble(std::vector<unsigned char> &OutputFileContents, bool bDisplayBinContents,bool bDisplayAssembly,PIC18F_FULL_IS &Instruction_Set)
+void Disassemble(const char *fileDir , bool bDisplayBinContents,bool bDisplayAssembly,PIC18F_FULL_IS &Instruction_Set)
 {
+
     MyTimerDissassembler.updateTimerReference();
     
-    Converted_Assembly_Code OutputAssemblyCode;
+    std::vector<unsigned char> hexFileContents;                 // holds contents of input file (".hex")
     
+    Copy_FIRMWARE_FILE_to_Buffer(fileDir,hexFileContents);
+    
+    Converted_Assembly_Code OutputAssemblyCode;                 // holds contents of output file (".asm")
+        
     clearEQU();
     
     ReadMCUHeader(Instruction_Set);
     
-    for(uint64_t file_pos=0; file_pos < OutputFileContents.size() ; )
+    for(uint64_t file_pos=0; file_pos < hexFileContents.size() ; )
     {
-        if(OutputFileContents[file_pos]==':')  // first character on a new line
+        if(hexFileContents[file_pos]==':')  // first character on a new line
         {
             file_pos++; // move past colon
             
-            if(dissassembleDataEntry(file_pos, OutputAssemblyCode,OutputFileContents,Instruction_Set, bDisplayAssembly,bDisplayBinContents) == true)
+            if(dissassembleDataEntry(file_pos, OutputAssemblyCode,hexFileContents,Instruction_Set, bDisplayAssembly,bDisplayBinContents) == true)
             {
                 break;
             }

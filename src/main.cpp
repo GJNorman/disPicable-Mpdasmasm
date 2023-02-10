@@ -57,7 +57,7 @@ int main(int argc, char **argv)
     uint32_t file_selector = 0;
     uint32_t headerSelector = 0;
     uint32_t function_selector = 0;
-
+    uint32_t cycleCounter = ~0;         // the program will cycle forever in console prompt mode
     if(argc < min_num_arguments)
     {
         
@@ -65,35 +65,44 @@ int main(int argc, char **argv)
         function_selector = printFunctionSelector();
 
         selectFile(headerSelector,headerList);
-    }
-    else
-    {
-        check_INC_FILE(argv[1],headerList);
         
-        function_selector = checkFunctionArgument(argv[2]);
-    }
-    while(1)
-    {
-        if(function_selector==DISASSEMBLER)
+        if(function_selector == ASSEMBLER)
+        {
+            selectFile(file_selector,asmList);
+        }
+        else if (function_selector == DISASSEMBLER)
         {
             selectFile(file_selector,hexFileList);
             
-            Instruction_Set.SetupRegisterNames(headerList[headerSelector].c_str());
             
-            std::vector<unsigned char> FileContents;
-            snprintf(filedir,sizeof(filedir),"%s",hexFileList[file_selector].c_str());
+        }
+    }
+    else
+    {
+        cycleCounter =1 ;
+        check_INC_FILE(argv[1],headerList);
+        
+        function_selector = checkFunctionArgument(argv[2]);
+        if(function_selector == ASSEMBLER)
+        {
+            check_ASM_File(argv[3],asmList);
+        }
+        else if (function_selector == DISASSEMBLER)
+        {
+            check_HEX_File(argv[3],hexFileList);
+        }
+    }
+    while(cycleCounter--!=0)
+    {
+        if(function_selector==DISASSEMBLER)
+        {
+            Instruction_Set.SetupRegisterNames(headerList[headerSelector].c_str());
+            Disassemble(hexFileList[file_selector].c_str(),  bDisplayBinContents, bDisplayAssembly,Instruction_Set);
 
-            Copy_FIRMWARE_FILE_to_Buffer(filedir,FileContents);
-            Disassemble(FileContents,  bDisplayBinContents, bDisplayAssembly,Instruction_Set);
-
-            FileContents.clear();
         }
         if(function_selector==ASSEMBLER)
         {
-            selectFile(file_selector,asmList);
-            snprintf(filedir,sizeof(filedir),"%s",asmList[file_selector].c_str());
-            Assemble(filedir, bDisplayBinContents, bDisplayAssembly,Instruction_Set);
-            
+            Assemble(asmList[file_selector].c_str(), bDisplayBinContents, bDisplayAssembly,Instruction_Set);
         }
 
         if(function_selector==COMPARE_FILES)

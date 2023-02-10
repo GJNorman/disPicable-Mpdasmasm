@@ -56,6 +56,19 @@ void getFileLists(std::vector<std::string> &hexFileList,std::vector<std::string>
     const std::filesystem::path path{Global_working_directory};
     for (auto const& dir_entry : std::filesystem::directory_iterator{ path })
     {
+        /*
+         For generating files for CMakeList.txt
+         if(strstr(dir_entry.path().c_str(),".cpp"))
+        {
+            std::string temp =dir_entry.path().c_str();
+            
+            size_t pos = temp.find("annoyed/");
+            
+            if(pos != std::string::npos){
+                pos += strlen("annoyed/");
+                std::cout << "target_sources(${PROJECT_NAME} PRIVATE "<< temp.substr(pos,temp.size() - pos) << ")\n";
+            }
+        }*/
         if(strstr(dir_entry.path().c_str(),".hex"))         // firmware files
         {
             std::string temp = dir_entry.path().c_str();
@@ -77,23 +90,40 @@ void getFileLists(std::vector<std::string> &hexFileList,std::vector<std::string>
         
     }
 }
-void check_INC_FILE(char * FileName, std::vector<std::string> &headerList)
+static void CheckFileArg(char * FileName, const char *fileExt, std::vector<std::string> &fileList, std::string ErrorPrompt)
 {
     bool validArg = false;
     if(FileName!=NULL)
     {
-        if(strstr(FileName,".inc")!=NULL)
+        if(strstr(FileName,fileExt)!=NULL)
         {
-            headerList.push_back(FileName);
+            std::string temp = FileName;
+            if(FileName[0] != '/')  // relative directory
+            {
+                std::string annoying = "/";
+                temp = Global_working_directory+annoying + FileName;
+            }
+            fileList.push_back(temp);
             validArg = true;
         }
     }
     if(validArg==false){
-        std::cout << "Invalid Argument - Arg zero must be a .inc file" << std::endl;
+        std::cout << ErrorPrompt << std::endl;
         exit(0);
     }
 }
-
+void check_INC_FILE(char * FileName, std::vector<std::string> &headerList)
+{
+    CheckFileArg(FileName,".inc", headerList,".inc file is invalid\n");
+}
+void check_ASM_File(char * FileName, std::vector<std::string> &asmList)
+{
+    CheckFileArg(FileName,".asm", asmList,".asm file is invalid\n");
+}
+void check_HEX_File(char * FileName, std::vector<std::string> &hexList)
+{
+    CheckFileArg(FileName,".hex", hexList,".hex file is invalid\n");
+}
 uint32_t checkFunctionArgument(const char *function)
 {
     uint32_t file_selector = ~0;

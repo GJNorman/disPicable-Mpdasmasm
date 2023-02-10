@@ -31,7 +31,8 @@ void selectFile(uint32_t &file_selector,std::vector<std::string> &fileList);
 
 // command line arguments
 void check_INC_FILE(char * FileName, std::vector<std::string> &headerList);
-
+void check_HEX_File(char * FileName, std::vector<std::string> &hexList);
+void check_ASM_File(char * FileName, std::vector<std::string> &asmList);
 // find out if this is the assembler or disassembler
 uint32_t checkFunctionArgument(const char *function);
 
