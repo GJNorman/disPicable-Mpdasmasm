@@ -70,7 +70,7 @@ int main(int argc, char **argv)
     {
         check_INC_FILE(argv[1],headerList);
         
-        file_selector = checkFunctionArgument(argv[2]);
+        function_selector = checkFunctionArgument(argv[2]);
     }
     while(1)
     {
