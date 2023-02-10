@@ -11,6 +11,12 @@
 #include <string.h>
 #include <stdarg.h>
 #include <sstream>
+
+#ifdef _WIN32
+#include<malloc.h>  // xcode gives an error
+#endif
+
+
 #include "PIC18_IS.h"
 #include "BasicFileEditing.hpp"
 #include "Disassembler.hpp"
@@ -19,9 +25,6 @@
 #include <filesystem>
 #include "ArgumentParser.hpp"
 
-#ifdef _WIN32
-#include<malloc.h>  // xcode gives an error
-#endif
 
 char Global_working_directory[FILENAME_MAX];
 
