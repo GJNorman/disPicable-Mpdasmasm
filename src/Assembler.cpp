@@ -86,7 +86,7 @@ void Assemble(const char *inputfiledir, bool bDisplayBinContents,bool bDisplayAs
     output_Machine_Code("%s","\r\n:00000001FF\r\n");
     
     char output_dir[FILENAME_MAX]="";
-    snprintf(output_dir,sizeof(output_dir),"%s/code.hex",Global_working_directory);
+    snprintf(output_dir,sizeof(output_dir),"%s/AssembledCode.hex",Global_working_directory);
     printHexCode(bDisplayAssembly,output_dir);
     
     std::cout << "Total Time to Assemble: " <<MyTimer.CheckDuration() << " seconds\n";
