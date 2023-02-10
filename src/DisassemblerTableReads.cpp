@@ -60,7 +60,7 @@ void markTableReads(Converted_Assembly_Code &OutputAssemblyCode,PIC18F_FULL_IS &
 }
 
 
-void setTablePointerValue(uint8_t &value, uint8_t &valueToSet, std::string &Assembly_Instruction)
+void setTablePointerValue(uint8_t &value, uint16_t &valueToSet, std::string &Assembly_Instruction)
 {
     if(Assembly_Instruction.find("SETF")    !=  std::string::npos)          // SET FILE
     {

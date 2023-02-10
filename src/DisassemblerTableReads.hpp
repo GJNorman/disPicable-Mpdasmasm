@@ -23,15 +23,15 @@ void markTableReads(Converted_Assembly_Code &OutputAssemblyCode,PIC18F_FULL_IS &
 void trackTableReads(char *&command_for_prompt, Converted_Assembly_Code &OutputAssemblyCode,uint16_t n );
 
 // save the values loaded into table pointer registers
-void setTablePointerValue(uint8_t &value, uint8_t &valueToSet, std::string &Assembly_Instruction);
+void setTablePointerValue(uint8_t &value, uint16_t &valueToSet, std::string &Assembly_Instruction);
 
 // class to store a table pointer address, which is stored in (upto) 3 registers
 // there is a overloaded ++ and -- operator to deal with INCF and DECF commands
 class TABLE_READ_ADDR_t{
 public:
-    uint8_t HIGH;
-    uint8_t LOW;
-    uint8_t UPPER;
+    uint16_t HIGH;
+    uint16_t LOW;
+    uint16_t UPPER;
     uint8_t currentSettingType;
     // a direct type is set using
     // an instruction like movlw

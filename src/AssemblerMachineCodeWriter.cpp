@@ -27,24 +27,7 @@ void output_Machine_Code(const char *Format_Specifier, ...)
     hexBuffer<<buffer;
     va_end(args);
 }
-// add padding to finish off a line
-// this is done with NOP instructions
-void padFile(uint32_t &address, uint16_t &check_sum)
-{
-    bool lineAdded=false;
-    while(address%16 != 0)
-    {
-        output_Machine_Code("%s","FFFF");
-        add_to_checksum(0xffff, check_sum);
-        address+=2;
-        lineAdded=true;
-    }
-    if(lineAdded==true)
-    {
-        output_Machine_Code("%.2X",(1+(~check_sum))&0xff);
-        check_sum=0;
-    }
-}
+
 /*
  copy the hex code to the output file specified
  

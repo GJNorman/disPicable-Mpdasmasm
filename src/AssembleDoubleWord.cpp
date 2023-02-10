@@ -7,6 +7,9 @@
 
 #include "AssembleDoubleWord.hpp"
 
+void find_FILE_values_for_assembly(const char *Assembly_Instruction,PIC18F_FULL_IS & Instruction_Set, uint64_t pos, uint32_t address, uint16_t &fs, uint16_t &fd);
+
+
 static void check_if_single_word_branch_will_work(uint32_t k, uint32_t address,const char *Assembly_Instruction,uint32_t &OPCODE_UPPER, uint32_t &OPCODE_LOWER)
 {
     int32_t check_if_rcall_can_be_used = (int32_t ) (k - address);

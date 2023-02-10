@@ -18,12 +18,8 @@
 #include "AssembleDisassembleCommonFunctions.hpp"
 #include "AssembleDirectives.hpp"
 #include "AssemblerFilePreprocessing.hpp"
-#include "DisassembleSingleword.hpp"
-#include "DisassembleDoubleWords.hpp"
-#include "DisassemblerLabels.hpp"
-#include "DisassemblerTableReads.hpp"
 #include "DisassembleDirectives.hpp"
-#include "DisassemblerFunctionStacks.hpp"
+#include "DisassemblerInstructionProcessor.hpp"
 #include "DisassemblerComments.hpp"
 #include "Timer.h"
 

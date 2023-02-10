@@ -26,4 +26,5 @@ std::ostringstream *grabMachineCodeBuffer();
 
 // add "NOP"s until we reach the end of a line
 void padFile(uint32_t &address, uint16_t &check_sum);
+
 #endif /* AssemblerMachineCodeWriter_hpp */

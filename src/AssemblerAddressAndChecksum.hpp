@@ -25,4 +25,7 @@ bool increment_assembler_address(uint16_t &upper_16_bits,
 void formatHexHeader(char *header,bool &check_sum_required,uint16_t &check_sum, uint32_t &address);
 
 
+// add padding to finish off a line
+// this is done with NOP instructions
+void padFile(uint32_t &address, uint16_t &check_sum);
 #endif /* AssemblerAddressAndChecksum_hpp */

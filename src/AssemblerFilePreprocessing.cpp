@@ -8,6 +8,24 @@
 #include "AssemblerFilePreprocessing.hpp"
 
 const char *DefineByteDirective = "DB ";
+std::string skip_inline_comments(std::string line_from_file,std::ifstream &input_file,char seperating_character, const char *CommentCharacter);
+
+void process_binary_file_line(std::string &line,std::string &next_line,Converted_Assembly_Code &Machine_Code_File,PIC18F_FULL_IS &Instruction_Set, uint32_t &File_Position_Counter, bool &borrowed_byte_from_next_line,std::ifstream &input_file);
+
+/*
+  line is valid if it has any relevant ascii characters present
+ */
+bool check_assembly_file_line_is_valid(std::string line,Converted_Assembly_Code &Machine_Code_File,PIC18F_FULL_IS &Instruction_Set,uint32_t &File_Position_Counter);
+
+void Convert_Databyte_into_hex_data(std::string line,std::string next_line,Converted_Assembly_Code &Machine_Code_File , uint32_t &File_Position_Counter,bool &borrowed_byte_from_next_line,PIC18F_FULL_IS &Instruction_Set);
+
+void process_standard_line_from_binary(Converted_Assembly_Code &Machine_Code_File, uint32_t &File_Position_Counter, std::string line);
+
+/*
+    store user defined bytes
+ */
+void find_define_byte_tags(Converted_Assembly_Code &Machine_Code_File,std::string line, const uint32_t File_Position_Counter,PIC18F_FULL_IS &Instruction_Set,uint8_t address_offset);
+
 
 
 bool check_file_fits_memory(Converted_Assembly_Code &Machine_Code_File,PIC18F_FULL_IS &Instruction_Set)

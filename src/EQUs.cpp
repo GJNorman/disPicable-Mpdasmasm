@@ -65,6 +65,15 @@ size_t findBitFieldParent(std::string &BitFieldTag)
 }
 void addNewEQU(std::string Assembly_Instruction)
 {
+    /*static bool avoidStrangeMallocError = 0;
+    
+    if(avoidStrangeMallocError == false){
+        avoidStrangeMallocError = true;
+        
+        EQU_List.reserve(50000);        // i think the continuous mallocing sets off the computer's bullshit detector
+                                        // because some of the .inc files are absurdly large
+        
+    }*/
     // example
     // TagName      equ     0007h
     // AnotherName  equ     0x500
