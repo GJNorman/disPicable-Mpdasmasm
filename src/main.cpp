@@ -53,14 +53,13 @@ int main(int argc, char **argv)
     bool bDisplayBinContents = false;
     bool bDisplayAssembly = false;
 
-    char filedir[FILENAME_MAX]="";
     uint32_t file_selector = 0;
     uint32_t headerSelector = 0;
     uint32_t function_selector = 0;
     uint32_t cycleCounter = ~0;         // the program will cycle forever in console prompt mode
     if(argc < min_num_arguments)
     {
-        
+        // prompt user for required files
         getFileLists(hexFileList,headerList,asmList);
         function_selector = printFunctionSelector();
 
@@ -73,12 +72,11 @@ int main(int argc, char **argv)
         else if (function_selector == DISASSEMBLER)
         {
             selectFile(file_selector,hexFileList);
-            
-            
         }
     }
     else
     {
+        // use argv for selecting inputs
         cycleCounter =1 ;
         check_INC_FILE(argv[1],headerList);
         
@@ -115,10 +113,7 @@ int main(int argc, char **argv)
             std::cout << "select generated file:\n";
             selectFile(secondFile,hexFileList);
             
-            snprintf(filedir,sizeof(filedir),"%s",hexFileList[firstFile].c_str());
-            char generatedFileDir[FILENAME_MAX];
-            snprintf(generatedFileDir,sizeof(filedir),"%s",hexFileList[secondFile].c_str());
-            compare_generated_and_original_hex_files(filedir,generatedFileDir);
+            compare_generated_and_original_hex_files(hexFileList[firstFile].c_str(),hexFileList[secondFile].c_str());
         }
         if(function_selector==3)
         {
@@ -159,7 +154,6 @@ int main(int argc, char **argv)
 
 void compare_generated_and_original_hex_files(const char *OrignialFileDir,const char *GeneratedFileDir)
 {
-    // this has been done is a lazy way
     FILE *f_org = fopen(OrignialFileDir,"rb");
     FILE *f_gen = fopen(GeneratedFileDir,"rb");
 
