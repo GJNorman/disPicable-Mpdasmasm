@@ -35,6 +35,23 @@ The main issue with the MPLAB diassembler, and other projects, is that they do n
 ### Disassembler
 Symbolic labels work for Branch/Call instruction, but not table reads. although the data being read by the table read is indicated in line with the instruction
 
+Apart from decoding instructions, the program will also 
+
+#### Highlight input arguments used for function calls
+
+<img width="585" alt="Screenshot 2023-02-10 at 8 32 13 pm" src="https://user-images.githubusercontent.com/113757511/218055949-4b190753-12c8-4ba4-8ae6-ccacaedd9a4c.png">
+
+
+The displayed values are in hex and ascii
+
+This can be helpful for quickly estimating the purpose of a function
+
+It works by monitoring the use of software stacks (i.e.  POSTINCx SFRs). If the code uses other register for passing arguments, this is not detected
+
+#### Highlight the value's being read by TBLRD instructions
+
+//TODO
+
 ### Assembler
 The Assembler can successfully re-assemble the disassembled hex file. It can also process brand new .asm files, but is not yet fully comptaible with MPLAB's assembler. 
   
