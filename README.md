@@ -159,3 +159,7 @@ note: you will need to provide the "i.inc" file yourself (it can be aquired from
 The program will search the working directory for files that have extensions ".inc", ".hex" and ".asm". It will then ask you which ones you wish to use
 
 
+#### Output
+
+The program will create a file called "DisassembledCode.asm" or "AssembledCode.hex" in the working directory
+
