@@ -1,5 +1,5 @@
 # disPicable-Mpdasmasm
-A disassembler / Assembler for Pic18 microcontrollers
+An Assembler / disassembler for Pic18 microcontrollers
 
 The name is light-hearted; 'disPicable' meaning its a disassembler for PIC MCUs, 'Mpdasmasm' meaning Microchip Disassembler-Assembler
 
