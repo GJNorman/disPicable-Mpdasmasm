@@ -18,7 +18,6 @@
 #include "Timer.h"
 #include <filesystem>
 #include "ArgumentParser.hpp"
-#define XCODE_IS_ANNOYING
 
 #ifdef _WIN32
 #include<malloc.h>  // xcode gives an error
