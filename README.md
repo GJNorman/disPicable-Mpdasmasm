@@ -54,6 +54,10 @@ If the function being called uses any SFRs, this will also be indicated
 
 you can see here that the function must be transmitting '\n' over UART (TXREG)
 
+A header will appear above each function indicating which register are used
+
+<img width="674" alt="Screenshot 2023-02-11 at 2 09 35 pm" src="https://user-images.githubusercontent.com/113757511/218236040-9520e785-7e3d-42fa-ad97-8378b724257d.png">
+
 #### Highlight the value's being read by TBLRD instructions
 
 <img width="548" alt="Screenshot 2023-02-11 at 12 36 26 pm" src="https://user-images.githubusercontent.com/113757511/218231794-0c27df40-8520-432c-ae71-efbcd1feea40.png">
