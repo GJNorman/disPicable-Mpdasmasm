@@ -56,7 +56,9 @@ you can see here that the function must be transmitting '\n' over UART (TXREG)
 
 #### Highlight the value's being read by TBLRD instructions
 
-//TODO
+<img width="548" alt="Screenshot 2023-02-11 at 12 36 26 pm" src="https://user-images.githubusercontent.com/113757511/218231794-0c27df40-8520-432c-ae71-efbcd1feea40.png">
+
+you can see that these nonsense commands are actually ascii data '3.' 
 
 ### Assembler
 The Assembler can successfully re-assemble the disassembled hex file. It can also process brand new .asm files, but is not yet fully comptaible with MPLAB's assembler. 
