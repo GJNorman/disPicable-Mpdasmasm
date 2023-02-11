@@ -48,6 +48,12 @@ This can be helpful for quickly estimating the purpose of a function
 
 It works by monitoring the use of software stacks (i.e.  POSTINCx SFRs). If the code uses other register for passing arguments, this is not detected
 
+If the function being called uses any SFRs, this will also be indicated
+
+<img width="726" alt="Screenshot 2023-02-11 at 12 19 07 pm" src="https://user-images.githubusercontent.com/113757511/218230426-626b892e-61a2-46e7-ba9d-4b7a01a72c51.png">
+
+you can see here that the function must be transmitting '\r' over UART (TXREG)
+
 #### Highlight the value's being read by TBLRD instructions
 
 //TODO
