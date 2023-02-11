@@ -154,12 +154,16 @@ you can either use command line arguments to specificy files/functionality or el
 
 To disassemble a file called "file.hex" that uses a pic18f45k50 MCU
 
-    disPicable pic18f45k50.inc dasm file.hex
+    disPicable dasm pic18f45k50.inc file.hex
 
 To assemble a file called "file.asm" that uses a pic18f45k50 MCU
 
-    disPicable pic18f45k50.inc asm file.asm
+    disPicable asm pic18f45k50.inc file.asm
 
+To compare the original hex file with the reassembled one
+
+    disPicable cmp original.hex generated.hex
+    
 note: you will need to provide the "i.inc" file yourself (it can be aquired from MPLAB for example)
 
 #### Prompt
