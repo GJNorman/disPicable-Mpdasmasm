@@ -15,6 +15,10 @@ std::string getMostRecentEQU()
 {
     return MostRecentEQU;
 }
+void clearMostRecentEQU()
+{
+    MostRecentEQU.clear();
+}
 void clearEQU()
 {
     EQU_List.clear();
@@ -112,7 +116,7 @@ void addNewEQU(std::string Assembly_Instruction)
 std::string processEQUforDisassembler(uint32_t regAddress, uint32_t mask)
 {
 
-    char temp[10] = "";
+    char temp[10];
     
     snprintf(temp,sizeof(temp),"0x%x",regAddress&mask);
     
@@ -136,7 +140,7 @@ std::string processEQUforDisassembler(uint32_t regAddress, uint32_t mask)
     return MostRecentEQU;
 }
 // take a variable name and return the address
-uint32_t processEQUforAssembler(std::string &RegisterName)
+uint32_t processEQUforAssembler(std::string RegisterName)
 {
     for(auto Equis: EQU_List)
     {
@@ -144,6 +148,7 @@ uint32_t processEQUforAssembler(std::string &RegisterName)
         {
             if(strncasecmp(Equis.Tag.c_str(),RegisterName.c_str(),Equis.Tag.size())==0)
             {
+                MostRecentEQU = Equis.Tag;
                 //replace with the register ID
                 uint32_t address = strtol(Equis.Address.c_str(),NULL,16) &0xffffff;
                 

@@ -27,5 +27,5 @@ void formatHexHeader(char *header,bool &check_sum_required,uint16_t &check_sum, 
 
 // add padding to finish off a line
 // this is done with NOP instructions
-void padFile(uint32_t &address, uint16_t &check_sum);
+void padFile(uint32_t &address, uint16_t &check_sum,bool &check_sum_required);
 #endif /* AssemblerAddressAndChecksum_hpp */

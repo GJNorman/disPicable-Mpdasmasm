@@ -36,13 +36,8 @@ void Assemble(const char *inputfiledir, bool bDisplayBinContents,bool bDisplayAs
     std::string Annoying = "/"; // gives an error to use as literal
     for(auto it: includedFiles)
     {
-        if(it.type == INCLUDE_RELATIVE){
-            std::string FileDir = Global_working_directory + Annoying + it.name;
-            AssemblyCode.append(Copy_Over_Binary_File(FileDir.c_str(),Instruction_Set));
-        }
+        AssemblyCode.append(Copy_Over_Binary_File(it.name.c_str(),Instruction_Set));
     }
-    //printEQUs();
-
     uint32_t START_ADDRESS=0;
     uint32_t address=0x00;                  // current program counter
     uint16_t address_upper_16bits=0;
@@ -50,14 +45,14 @@ void Assemble(const char *inputfiledir, bool bDisplayBinContents,bool bDisplayAs
     bool check_sum_required=true;
     
     
-    output_Machine_Code("%s",":020000040000FA");
+    output_Machine_Code(":020000040000FA");
 
     size_t counter =0;
     for (auto Assembly_Instruction: AssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM)
     {
 
-        if(true){
-          //  std::cout<< AssemblyCode.Address[counter] << "\t\t"<<Assembly_Instruction<< "\n";
+        if(bDisplayAssembly == true){
+            std::cout<< AssemblyCode.Address[counter] << "\t\t"<<Assembly_Instruction<< "\n";
             counter++;
         }
         bool instruction_found =  processInstruction(Assembly_Instruction,
@@ -80,7 +75,8 @@ void Assemble(const char *inputfiledir, bool bDisplayBinContents,bool bDisplayAs
         
         
     }
-    padFile(address,check_sum);
+
+    padFile(address,check_sum,check_sum_required);
 
     //End of FILE
     output_Machine_Code("%s","\r\n:00000001FF\r\n");

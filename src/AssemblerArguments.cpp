@@ -269,15 +269,9 @@ uint16_t check_if_FSR_or_RAW_REG(const char *REGISTER,PIC18F_FULL_IS & Instructi
  ###################################################################################*/
 uint32_t convert_FSR_for_assembler(const char *SFR_REG,PIC18F_FULL_IS & Instruction_Set, uint32_t offset)
 {
-
     // remove leading white space
     size_t p1=CheckForLeadingSpaces(SFR_REG,0);
     
-    // check for the end of the word/line
-   // size_t p2 = FindNextSpaceCharacter(SFR_REG,p1+1);
-       
-    //p2--;
-
     uint32_t f=0;
     uint16_t counter=0;
 

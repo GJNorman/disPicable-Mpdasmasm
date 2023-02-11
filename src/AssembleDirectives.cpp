@@ -115,11 +115,10 @@ void processDirective(std::string Assembly_Instruction,
 
 void assemble_non_program_data(uint16_t REG_VALUE, const char *Assembly_Instruction,  uint32_t &address,uint16_t &address_upper_16bits, uint16_t &checksum,bool &check_sum_required, uint32_t FLASH_size,bool IsEEPROM)
 {
-    if(check_sum_required==true)
-    {
-        // to get here we must have finished the main program data, so finish the current line before continueing
-        padFile(address, checksum);
-    }
+
+    // to get here we must have finished the main program data, so finish the current line before continueing
+    padFile(address, checksum,check_sum_required);
+    
 
     uint16_t check_sum = 0x2 +0x4 + REG_VALUE;
 
@@ -161,10 +160,12 @@ void assemble_EEPROM_data(uint16_t EEPROM_START_ADD_U16, const char *Assembly_In
     {
         first_eeprom_bank=1;
         
-        padFile(address, checksum);
+        padFile(address, checksum,check_sum_required);
+        
+        output_Machine_Code("\r\n:0200000400F00A");
     }
 
-    output_Machine_Code("%s","\r\n:");
+    output_Machine_Code("\r\n:");
     
     char *temp = GrabLabelledData(Assembly_Instruction);
     
@@ -208,7 +209,8 @@ void processORG(uint32_t &address, std::string Assembly_Instruction, uint32_t &S
     // we will fill the space between the current address and the new ORG address with NOPs
     while(temp_address !=address)
     {
-        padFile(temp_address, check_sum);
+        bool checkSumRequired = false;
+        padFile(temp_address, check_sum,checkSumRequired);
         
         // start of the next line
         output_Machine_Code(":10%.4X00",temp_address&0xffff);

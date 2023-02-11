@@ -41,7 +41,7 @@ bool check_file_fits_memory(Converted_Assembly_Code &Machine_Code_File,PIC18F_FU
         }
 
     }
-    max_size+=2;    //max sixe points to start of instruction address, we need it to point to end of the isntruction
+    max_size+=2;    //max size points to start of instruction address, we need it to point to end of the isntruction
     
     printf("The program uses 0x%.4X of 0x%.4X Bytes of Memory\nThere are %d bytes (%d Instructions) remaining\n",max_size,Instruction_Set.FLASH_size ,Instruction_Set.FLASH_size -max_size+1,(signed)(Instruction_Set.FLASH_size -max_size+1)/2);
     //each line uses 2 bytes of memory

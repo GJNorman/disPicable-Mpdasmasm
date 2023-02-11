@@ -55,9 +55,15 @@ void formatHexHeader(char *header, bool &check_sum_required,uint16_t &check_sum,
         snprintf(header,headerMaxSize,"\r\n:10%.4X00",address&0xffff);
     }
 }
-void padFile(uint32_t &address, uint16_t &check_sum)
+void padFile(uint32_t &address, uint16_t &check_sum,bool &check_sum_required)
 {
     bool lineAdded=false;
+    if(check_sum_required == true)
+    {
+        output_Machine_Code("%.2X",(1+(~check_sum))&0xff);
+        check_sum=0;
+        check_sum_required = false;
+    }
     while(address%16 != 0)
     {
         output_Machine_Code("%s","FFFF");

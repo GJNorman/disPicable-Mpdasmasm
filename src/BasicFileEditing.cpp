@@ -7,6 +7,7 @@
 
 #include "BasicFileEditing.hpp"
 
+// replace tabs with spaces
 std::string remove_tabs(std::string next_line)
 {
     for(auto it = 0; it < next_line.size(); it++)
@@ -58,6 +59,8 @@ void check_for_escape_characters(uint8_t &counter, char *&data_bytes)
         check_data_bytes(data_bytes[counter]);
     }
 }
+
+// copies binary file contents into ram Buffer
 void Copy_FIRMWARE_FILE_to_Buffer(const char *Input_File_dir,std::vector<unsigned char> &OutputFileContents)
 {
     std::ifstream input( Input_File_dir, std::ios::binary );
@@ -121,6 +124,18 @@ size_t findTermInCharString(size_t defaultValue, const char *parent_String,const
     return p1;
 }
 
+/*
+    return a substring found between the terms "searchTerm1" and "searchTerm2"
+ 
+    the offsets can be used to include "searchTerm1/2" in the substring
+ 
+ 
+    "x=15;"
+ 
+     return_substring("x=15;","x=",";",0,strlen("x="),0);
+     
+     will return "15"
+ */
 char* return_substring(const char *parent_String,
                        const char *searchTerm1,
                        const char *searchTerm2,
@@ -150,12 +165,18 @@ char* return_substring(const char *parent_String,
     return copy_out_substring(p1,p2,parent_String);
 }
 
+// takes one character and replces it with another. There is no realloc in this function, so strings must be the same size
 void removeCharacters(const char *CharacterToRemove, const char *ReplacementCharacter, char *buffer)
 {
+    if(strlen(CharacterToRemove) != strlen(ReplacementCharacter))
+    {
+        std::cout << "removeCharacters() requires two equal length string to function correctly, we have: '"<<CharacterToRemove <<"' and: '"<<ReplacementCharacter <<"'\n" ;
+        return;
+    }
     char *NextCarriage = strstr(buffer,CharacterToRemove);
     while(NextCarriage!= NULL)
     {
-        size_t p1 = NextCarriage-buffer;//(strstr(buffer,"\r")-buffer);
+        size_t p1 = NextCarriage-buffer;
         
         for (uint8_t index=0; index< strlen(ReplacementCharacter); index++)
             buffer[p1+index] =ReplacementCharacter[index];
@@ -164,17 +185,16 @@ void removeCharacters(const char *CharacterToRemove, const char *ReplacementChar
        
     }
 }
+
+// some text editors play a fun game called "insert a bunch of silly nonsense"
+// this is our way of fighting back against tyranny
 char* delete_all_the_stupid_carriage_returns(const char *input_file)
 {
-    
     size_t temp_file_name_length =strlen(input_file)+strlen("temp_____") + 1;
     char *temp_file=(char*)malloc(sizeof(char)*(temp_file_name_length));
-    
-    
+        
     char *buffer = copy_file_to_buffer(input_file);
-    
-    
-    
+
     if(buffer!=NULL)
     {
         char *main_name = return_substring(input_file, NULL, ".", 0,0, 0);
@@ -184,8 +204,7 @@ char* delete_all_the_stupid_carriage_returns(const char *input_file)
             snprintf(temp_file,temp_file_name_length,"%s_temp.txt",main_name);
             FILE * fp = fopen( temp_file,"wb");
 
-            //printf("%s",buffer);
-            removeCharacters("\r","\n ",buffer);
+            removeCharacters("\r"," ",buffer);    
             removeCharacters("\t"," ",buffer);
 
             fprintf(fp,"%s\n",buffer);
@@ -225,16 +244,17 @@ size_t CheckForLeadingSpaces(const char *data, size_t start_pos)
 {
     size_t p1 = start_pos;
     
-    while((data[p1] == ' ') && (p1<strlen(data)))
+    while((data[p1] == ' ') && (p1<strlen(data)))   // this is not the same as "FindNextSpaceCharacter"!
     {
         p1++;
     }
     
     return p1;
 }
+//remove leading spaces
 size_t RemoveLeadingSpaces(std::string &data, size_t start_pos)
 {
-   //remove leading spaces
+
     size_t p1 = CheckForLeadingSpaces(data.c_str(),start_pos);
    
    if((p1 != start_pos) && (p1 != data.size() ))
@@ -243,7 +263,7 @@ size_t RemoveLeadingSpaces(std::string &data, size_t start_pos)
    return p1;
 }
 
-
+// either find the next space, or else the end of the string
 size_t FindNextSpaceCharacter(const char* data, size_t start_pos)
 {
     size_t p1 = start_pos;
@@ -255,6 +275,13 @@ size_t FindNextSpaceCharacter(const char* data, size_t start_pos)
     
     return p1;
 }
+size_t FindNextSpaceCharacter(std::string &data, size_t start_pos)
+{
+    size_t p1 = FindNextSpaceCharacter(data.c_str(),start_pos);
+   
+   return p1;
+}
+
 // find the position of the first chracter that indicates that the current word has ended
 // this will not work for strings literals
 size_t FindEndOfCurrentWord(const char *data, size_t start_pos)
@@ -274,13 +301,9 @@ size_t FindEndOfCurrentWord(const char *data, size_t start_pos)
     return p1;
     
 }
-size_t FindNextSpaceCharacter(std::string &data, size_t start_pos)
-{
-    size_t p1 = FindNextSpaceCharacter(data.c_str(),start_pos);
-   
-   return p1;
-}
 
+// currentPos is pointing to the end of a word
+// we read backwards until we find a charcter that would indicate the start of a word (or the beginning of the string)
 size_t findWhereCurrentWordBegan(const char* data,size_t currentPos)
 {
     
@@ -294,7 +317,7 @@ size_t findWhereCurrentWordBegan(const char* data,size_t currentPos)
     return p1;
 }
 
-
+// adds an escape slash to an escape character for literal formatting
 void removeEscapeCharacter(char character, char* dst, size_t dst_size)
 {
     // get rid of escape sequences

@@ -141,7 +141,7 @@ void generate_asm(std::vector<uint8_t> &MachineCode,
             char LOWER[10];
             removeEscapeCharacter(upperByte,UPPER,sizeof(UPPER));
             removeEscapeCharacter(lowerByte,LOWER,sizeof(LOWER));
-            snprintf(command_for_prompt,command_for_prompt_len_max,"    DB \"%s\"\n    DB \"%s\"",UPPER,LOWER);
+            snprintf(command_for_prompt,command_for_prompt_len_max,"    DB \"%s\"\n    DB \"%s\"",LOWER,UPPER);
             OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM.push_back(command_for_prompt);
 
         }
@@ -163,6 +163,7 @@ void finalise_command(char *&command_for_prompt,
     
     trackTableReads(command_for_prompt,OutputAssemblyCode,n);
     watchFunctionStacks(command_for_prompt,OutputAssemblyCode);
+    
     /*
      optionally add comments explaining what each command does
      */
@@ -191,6 +192,6 @@ void finalise_command(char *&command_for_prompt,
 
         free(temp);
     }
-
+    clearMostRecentEQU();
 }
 

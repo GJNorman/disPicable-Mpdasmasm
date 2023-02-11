@@ -154,9 +154,7 @@ public:
     {
         std::cout << MCU_TYPE << " Selected - ";
         
-        
         this->MCU.clear();
-        
         
         const char *StartOfFileName = strrchr(MCU_TYPE,'/')+1;
         size_t Dot = strrchr(MCU_TYPE, '.')-StartOfFileName;

@@ -29,6 +29,8 @@ enum EQU_Types{
 // grab the previously found equ
 std::string getMostRecentEQU();
 
+void clearMostRecentEQU();
+
 // reset vector
 void clearEQU();
 
@@ -37,7 +39,7 @@ void addNewEQU(std::string Assembly_Instruction);
 
 // compares the register named in a command to the list of equ's
 // returns the address if successful, otherwise ~0
-uint32_t processEQUforAssembler(std::string &RegisterName);
+uint32_t processEQUforAssembler(std::string RegisterName);
 
 //convert a register address into a variable name
 std::string processEQUforDisassembler(uint32_t regAddress, uint32_t mask);

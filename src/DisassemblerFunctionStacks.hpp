@@ -24,6 +24,21 @@ enum FuncionArgumentTypes{
     INTEGER = 0,
     REGISTER = 1,
 };
-void watchFunctionStacks(char* Instruction,Converted_Assembly_Code &OutputAssemblyCode);
 
+
+typedef struct{
+    std::string Reg;
+    uint32_t address;
+}RegistersTracker_t;
+
+typedef struct{
+    uint32_t address_of_call;
+    uint32_t address_of_function;
+}ListOfFunctionCalls_t;
+
+
+void watchFunctionStacks(char* Instruction,Converted_Assembly_Code &OutputAssemblyCode);
+void HighlightFSRs(Converted_Assembly_Code &OutputAssemblyCode);
+
+std::string grabFSRList(int funcNum);
 #endif /* DisassemblerFunctionStacks_hpp */

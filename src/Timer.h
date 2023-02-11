@@ -83,10 +83,6 @@ public:
             
             return false;
         }
-    
-
-    
-
 };
 
 #endif /* Timer_h */

@@ -9,10 +9,14 @@
 extern char Global_working_directory[FILENAME_MAX];
 TimerClass MyTimerDissassembler;
 
+// final formatting for assembled commands
+void finalise_command(char *&command_for_prompt,                        // current instruction being assembled
+                      Converted_Assembly_Code &OutputAssemblyCode,      // assembled file contents
+                      const char *Description,                          // comment explaining instruction (optional)
+                      uint16_t Address_Upper_16_bits,                   // upper 16 bits of flash address
+                      uint32_t device_mem_size,                         // total flash memory - not implemented
+                      uint16_t n );                                     // opcode
 
-uint32_t Convert_num_to_hex( std::vector<unsigned char> input,uint64_t &vec_start, uint8_t return_len);
-
-void finalise_command(char *&command_for_prompt,Converted_Assembly_Code &OutputAssemblyCode, const char *Description, uint16_t Address_Upper_16_bits,uint32_t device_mem_size,uint16_t n );
 bool dissassembleDataEntry(uint64_t &file_pos,
                            Converted_Assembly_Code &OutputAssemblyCode,
                            std::vector<unsigned char> &OutputFileContents,
@@ -20,28 +24,44 @@ bool dissassembleDataEntry(uint64_t &file_pos,
                            bool bDisplayAssembly,
                            bool bDisplayBinContents);
 
-static void ReadMCUHeader(PIC18F_FULL_IS &Instruction_Set)
+static void ReadMCUHeader(const char * HeaderFile,PIC18F_FULL_IS &Instruction_Set)
 {
+    if(HeaderFile == NULL)
+    {
+        return;
+    }
     clearIncludedFileDirectories();
     
-    char fileDir[FILENAME_MAX] = "";
+    char fileDir[FILENAME_MAX];
     
-    snprintf(fileDir,sizeof(fileDir),"%s/%s.inc",Global_working_directory,Instruction_Set.MCU.c_str());
+    if(HeaderFile[0]!='/')  // relative directory
+        snprintf(fileDir,sizeof(fileDir),"%s/%s",Global_working_directory,HeaderFile);
+    else                    // absolute directory
+        snprintf(fileDir,sizeof(fileDir),"%s",HeaderFile);
     
     Copy_Over_Binary_File(fileDir,Instruction_Set);
     
 }
 
-void WriteAssemblyCodeToFile(Converted_Assembly_Code &OutputAssemblyCode, bool bDisplayBinContents, bool bDisplayAssembly,PIC18F_FULL_IS &Instruction_Set)
+void WriteAssemblyCodeToFile(Converted_Assembly_Code &OutputAssemblyCode, const char *HeaderFile,bool bDisplayBinContents, bool bDisplayAssembly,PIC18F_FULL_IS &Instruction_Set)
 {
     char output_dir[FILENAME_MAX];
     snprintf(output_dir,sizeof(output_dir),"%s/DisassembledCode.asm",Global_working_directory);
     FILE *fp = fopen(output_dir,"w");
     
     // MCU header
-    fprintf(fp,"#include \"%s.inc\"\n",Instruction_Set.MCU.c_str());
-    
-    
+    if(HeaderFile != NULL)
+    {
+        if(HeaderFile[0] != '/')
+        {
+            fprintf(fp,"#include \"%s\"\n",HeaderFile);
+        }
+        else
+        {
+            fprintf(fp,"#include <%s>\n",HeaderFile);
+        }
+    }
+    uint32_t functionCounter = 0;
     for (uint64_t  pos = 0;pos<OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM.size();pos++)
     {
         
@@ -60,9 +80,15 @@ void WriteAssemblyCodeToFile(Converted_Assembly_Code &OutputAssemblyCode, bool b
         
         fprintf(fp,"%s\n",OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM[pos].c_str());
         
-        if(strstr(OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM[pos].c_str(),"RET"))//RETFIE, RETURN
+        if((strstr(OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM[pos].c_str(),"RET"))//RETFIE, RETURN
+           ||(functionCounter==0))
         {
-            fprintf(fp,";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;\n;\n;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;\n");
+            // print a list of special function registers used in the function
+            fprintf(fp,";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;\n;");
+            std::string SFRs = grabFSRList(functionCounter);
+            functionCounter++;
+            fprintf(fp,"%s",SFRs.c_str());
+            fprintf(fp,"\n;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;\n");
         }
         
     }
@@ -70,7 +96,7 @@ void WriteAssemblyCodeToFile(Converted_Assembly_Code &OutputAssemblyCode, bool b
 
 }
 
-void Disassemble(const char *fileDir , bool bDisplayBinContents,bool bDisplayAssembly,PIC18F_FULL_IS &Instruction_Set)
+void Disassemble(const char *fileDir, const char* HeaderFile, bool bDisplayBinContents,bool bDisplayAssembly,PIC18F_FULL_IS &Instruction_Set)
 {
 
     MyTimerDissassembler.updateTimerReference();
@@ -83,7 +109,7 @@ void Disassemble(const char *fileDir , bool bDisplayBinContents,bool bDisplayAss
         
     clearEQU();
     
-    ReadMCUHeader(Instruction_Set);
+    ReadMCUHeader(HeaderFile,Instruction_Set);
     
     for(uint64_t file_pos=0; file_pos < hexFileContents.size() ; )
     {
@@ -101,6 +127,8 @@ void Disassemble(const char *fileDir , bool bDisplayBinContents,bool bDisplayAss
             file_pos++;
         }
     }
+    HighlightFSRs(OutputAssemblyCode);
+    
     markTableReads(OutputAssemblyCode,Instruction_Set);
 
     AddAllComments(OutputAssemblyCode);
@@ -109,7 +137,7 @@ void Disassemble(const char *fileDir , bool bDisplayBinContents,bool bDisplayAss
     
     addLabelsToAssemblyCode(OutputAssemblyCode);
 
-    WriteAssemblyCodeToFile(OutputAssemblyCode,bDisplayBinContents, bDisplayAssembly,Instruction_Set);
+    WriteAssemblyCodeToFile(OutputAssemblyCode,HeaderFile,bDisplayBinContents, bDisplayAssembly,Instruction_Set);
     
     std::cout << MyTimerDissassembler.CheckDuration() << "  seconds\n";
 }
@@ -156,7 +184,6 @@ bool dissassembleDataEntry(uint64_t &file_pos,
             add_ORG_to_asm_file(address,OutputAssemblyCode);
         }
 
-        //line_counter+=number_of_bytes/2;
         number_of_bytes*=2;
 
         std::vector<uint8_t> Data_bytes(number_of_bytes);

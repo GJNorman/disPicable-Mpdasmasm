@@ -6,30 +6,82 @@
 //
 
 #include "DisassemblerFunctionStacks.hpp"
+
+static std::vector<FunctionStack_t> inputArguments;
+std::vector<RegistersTracker_t> FunctionRegisterList;
+
+std::vector<ListOfFunctionCalls_t> ListOfFunctionCalls;
+static int CurrentFunctionCounter = 0;
+
+
+std::string grabFSRList(int funcNum)
+{
+    if(funcNum<FunctionRegisterList.size())
+    {
+        return FunctionRegisterList[funcNum].Reg;
+    }
+    else
+    {
+        return "NONE";
+    }
+}
+
+static void setFunctionRegisterList(bool &newFunction, uint32_t address)
+{
+    std::string EQU = getMostRecentEQU();
+    if(newFunction == true)
+    {
+        newFunction = false;
+       
+        RegistersTracker_t newTracker ;
+        
+        newTracker.Reg = "SFRs: ";
+        newTracker.address = address;
+        FunctionRegisterList.push_back(newTracker);
+    }
+    if(EQU.empty() == false)
+    {
+        FunctionRegisterList[CurrentFunctionCounter].Reg += EQU + ", ";
+    }
+}
+static void isolateCallAddresses(char* Instruction, uint32_t call_address)
+{
+    size_t endOfInstruction = (strstr(Instruction,"CALL")-Instruction) + strlen("CALL");
+    
+    while(Instruction[endOfInstruction] == ' ')
+    {
+        endOfInstruction++;
+    }
+    
+    uint32_t Function_address = (uint32_t) strtol(&Instruction[endOfInstruction],NULL,16);
+    
+    ListOfFunctionCalls_t newCall ;
+    
+    newCall.address_of_call = call_address;
+    newCall.address_of_function = Function_address;
+    
+    ListOfFunctionCalls.push_back(newCall);
+}
+// keep track of how software stacks are being loaded (FSRs)
 //TODO
 /*
  
- MOVF 0x39, 0, 0                                ;address = 0837, data = 'n'
- MOVWF POSTINC1, A                              ;address = 0838, data = '∆'
+ MOVF 0x39, 0, 0                                ;
+ MOVWF POSTINC1, A                              ;
  CALL LABEL_0x77C0 , 0                          ;args={0xFF ,0xFF }
  */
-static std::vector<FunctionStack_t> inputArguments;
-
-
-
-
-std::vector<std::vector<std::string>> FunctionRegisterList;
-void keepTrackFunctionRegsiters()
-{
-    // will hold either and SFR or Regsiter address
-    std::string EQU = getMostRecentEQU();
-}
-
-
-// keep track of how software stacks are being loaded (FSRs)
 void watchFunctionStacks(char* Instruction,Converted_Assembly_Code &OutputAssemblyCode)
 {
+    
     static uint8_t previousMovlwValue = 0;
+    static bool firstCall = true;
+    
+    uint32_t CurrentAddress = (uint32_t)OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM.size();
+    setFunctionRegisterList(firstCall,(uint32_t)strtol(OutputAssemblyCode.Address[OutputAssemblyCode.Address.size()-1].c_str(),NULL,16));
+                            
+                            //CurrentAddress);
+    
+    
     if(strstr(Instruction,"MOVLW"))
     {
         size_t point1 = strstr(Instruction,"MOVLW")-Instruction + strlen("MOVLW") + 1;
@@ -73,15 +125,24 @@ void watchFunctionStacks(char* Instruction,Converted_Assembly_Code &OutputAssemb
             inputArguments.push_back(newStack);
         }
     }
-    else if(strstr(Instruction,"POSTDEC"))
+    else if((strstr(Instruction,"POSTDEC"))||(strstr(Instruction,"RET")))
     {
         inputArguments.clear();
+        
+        if(strstr(Instruction,"RET"))
+        {
+            firstCall = true;
+            CurrentFunctionCounter++;
+        }
     }
     else if(strstr(Instruction,"CALL"))
     {
-                uint8_t addComma = 0;
+        isolateCallAddresses(Instruction,CurrentAddress);
+        uint8_t addComma = 0;
         char COMMENT[100];
+        
         snprintf(COMMENT,sizeof(COMMENT),"args={");
+        
         for(auto it: inputArguments)
         {
             // avoid placing comma before first agrument
@@ -114,26 +175,18 @@ void watchFunctionStacks(char* Instruction,Converted_Assembly_Code &OutputAssemb
 
 /*
  
- read through the finalised file, looking for function calls
- 
- then find the function being called, read through it to scan for SFRs
- 
+indicate which registers are being used in function calls, at the point where the function is called
  */
 void HighlightFSRs(Converted_Assembly_Code &OutputAssemblyCode)
 {
-    for(size_t it =0; it < OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM.size() ; it++)
+    for (auto it : ListOfFunctionCalls)
     {
-        if(OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM[it].find("CALL"))
+        for(auto reg_it: FunctionRegisterList)
         {
-            // go through list of labels; and compar to call instruction label
-            
-            for(size_t labels = 0; labels < OutputAssemblyCode.LABEL_STRINGS.size(); labels++)
+            if(it.address_of_function == reg_it.address)
             {
-                if(strstr(OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM[it].c_str(),  OutputAssemblyCode.LABEL_STRINGS[labels].c_str()))
-                {
-                    // being reading that address
-                   // while(OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM)
-                }
+                OutputAssemblyCode.Comments.push_back(reg_it.Reg);
+                OutputAssemblyCode.CommentAddress.push_back(it.address_of_call);
             }
         }
     }

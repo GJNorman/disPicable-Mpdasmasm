@@ -7,7 +7,7 @@
 
 #include "MacroEngine.hpp"
 
-
+extern char Global_working_directory[FILENAME_MAX];
 static std::vector<Macro_definition_t> MacroList;
 static std::vector<include_directory_t> includesList;
 
@@ -133,7 +133,23 @@ bool checkForMacro(std::string &Line, size_t filePos)
     
     return returnValue;
 }
-
+static void addIncludeDirectory(uint8_t type,const char* boundingCharacter, std::string NextLine, size_t &fileNameStart)
+{
+    fileNameStart++;
+    size_t fileNameEnd = NextLine.find(boundingCharacter,fileNameStart);
+    
+    include_directory_t newDir;
+    std::string NewFileName = (NextLine.substr(fileNameStart,fileNameEnd-fileNameStart));
+    
+    if(type == INCLUDE_RELATIVE)
+    {
+        std::string Annoying = "/";
+        std::string FileDir = Global_working_directory + Annoying + NewFileName;
+    }
+    newDir.type = type;
+    newDir.name = NewFileName;
+    includesList.push_back(newDir);
+}
 void checkPreprocesseorDirectives(std::string &NextLine, size_t fileLine)
 {
     //include_directory_t rt_ptr;
@@ -160,24 +176,26 @@ void checkPreprocesseorDirectives(std::string &NextLine, size_t fileLine)
     else
     {
         //look for other directives
-        
         p2 = NextLine.find("#include");
         if(p2 != std::string::npos)
         {
             // look for relative directory, bounded by " "
             
-            size_t fileNameStart = NextLine.find("\"")+1;
+            size_t fileNameStart = NextLine.find("\"");
             
             if(fileNameStart!=std::string::npos)
             {
-                size_t fileNameEnd = NextLine.find("\"",fileNameStart);
+                addIncludeDirectory(INCLUDE_RELATIVE,"\"", NextLine, fileNameStart);
+            }
+            // look for absolute directory, bound by < >
+            else
+            {
+                size_t fileNameStart = NextLine.find("<");
                 
-                include_directory_t newDir;
-                
-                newDir.type = INCLUDE_RELATIVE;
-                newDir.name = (NextLine.substr(fileNameStart,fileNameEnd-fileNameStart));
-                includesList.push_back(newDir);
-                
+                if(fileNameStart!=std::string::npos)
+                {
+                    addIncludeDirectory(INCLUDE_ABSOLUTE,">", NextLine, fileNameStart);
+                }
             }
         }
     }

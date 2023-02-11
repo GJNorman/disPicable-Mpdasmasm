@@ -23,6 +23,6 @@
 #include "DisassemblerComments.hpp"
 #include "Timer.h"
 
-void Disassemble(const char *hexFile, bool bDisplayBinContents,bool bDisplayAssembly,PIC18F_FULL_IS &Instruction_Set);
+void Disassemble(const char *hexFile, const char* HeaderFile, bool bDisplayBinContents,bool bDisplayAssembly,PIC18F_FULL_IS &Instruction_Set);
 
 #endif /* Disassembler_hpp */
