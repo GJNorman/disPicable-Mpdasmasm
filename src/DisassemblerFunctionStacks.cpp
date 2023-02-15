@@ -41,7 +41,12 @@ static void setFunctionRegisterList(bool &newFunction, uint32_t address)
     }
     if(EQU.empty() == false)
     {
-        FunctionRegisterList[CurrentFunctionCounter].Reg += EQU + ", ";
+        // make sure we haven't already recorded this regiser
+        // sometimes you can end up with hundreds in large functions
+        std::string Temp = " "+ EQU + ",";
+        
+        if(FunctionRegisterList[CurrentFunctionCounter].Reg.find(Temp) == std::string::npos)
+            FunctionRegisterList[CurrentFunctionCounter].Reg += EQU + ", ";
     }
 }
 static void isolateCallAddresses(char* Instruction, uint32_t call_address)
