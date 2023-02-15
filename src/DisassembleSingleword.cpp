@@ -48,7 +48,7 @@ void disassemble_with_PIC18f_SingleWord(uint16_t MachineCode_byte, PIC18F_FULL_I
     switch(CASE_TYPE)
     {
         case PIC18F_FDA_CASE:
-            snprintf(temp,sizeof(temp),"%s %s, %u, %u", opcode_mnem.c_str(),f_stand_in,d,Access_or_bank_RAM);
+            snprintf(temp,sizeof(temp),"%s %s, %u, %c", opcode_mnem.c_str(),f_stand_in,d,Access_or_bank_RAM);
             break;
         case PIC18F_FA_CASE:
             snprintf(temp,sizeof(temp),"%s %s, %c", opcode_mnem.c_str(),f_stand_in,Access_or_bank_RAM);

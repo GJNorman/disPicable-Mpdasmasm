@@ -335,6 +335,7 @@ void removeEscapeCharacter(char character, char* dst, size_t dst_size)
         case '\0':snprintf(dst,dst_size,"\\0"); break;
         default:
             dst[0] = character;
+            dst[1] = '\0';
             break;
     }
     
