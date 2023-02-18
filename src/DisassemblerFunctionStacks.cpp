@@ -68,47 +68,58 @@ static void isolateCallAddresses(char* Instruction, uint32_t call_address)
     ListOfFunctionCalls.push_back(newCall);
 }
 // keep track of how software stacks are being loaded (FSRs)
-//TODO
-/*
- 
- MOVF 0x39, 0, 0                                ;
- MOVWF POSTINC1, A                              ;
- CALL LABEL_0x77C0 , 0                          ;args={0xFF ,0xFF }
- */
 void watchFunctionStacks(char* Instruction,Converted_Assembly_Code &OutputAssemblyCode)
 {
     
-    static uint8_t previousMovlwValue = 0;
+    static WREG_Follower_t Shadow_WREG ;
     static bool firstCall = true;
     
     uint32_t CurrentAddress = (uint32_t)OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM.size();
     setFunctionRegisterList(firstCall,(uint32_t)strtol(OutputAssemblyCode.Address[OutputAssemblyCode.Address.size()-1].c_str(),NULL,16));
                             
-                            //CurrentAddress);
-    
-    
     if(strstr(Instruction,"MOVLW"))
     {
         size_t point1 = strstr(Instruction,"MOVLW")-Instruction + strlen("MOVLW") + 1;
         
-        previousMovlwValue =strtol(&Instruction[point1], NULL, 16);
+        Shadow_WREG.value =strtol(&Instruction[point1], NULL, 16);
+        Shadow_WREG.type = FuncionArgumentTypes::literal;
     }
-    else if(strstr(Instruction,"POSTINC"))
+    else if(strstr(Instruction,"MOVF "))
+    {
+        size_t point1 = strstr(Instruction,"MOVF")-Instruction + strlen("MOVF") + 1;
+        
+        size_t point2 = strstr(&Instruction[point1], ",")-Instruction;
+        char temp[point2-point1+1];
+        strncpy(temp,&Instruction[point1],point2-point1);
+        temp[point2-point1] = 0;
+        
+        Shadow_WREG.REG.Reg = temp;
+        Shadow_WREG.type = FuncionArgumentTypes::RAM;
+    }
+    if(strstr(Instruction,"POSTINC"))
     {
         if(strstr(Instruction,"FSR") == NULL)   // MOVFF FSR2, POSTINC1  ; this would indicate a context save, not stack loading
         {
             FunctionStack_t newStack;
+            newStack.type = Shadow_WREG.type;
+            if( Shadow_WREG.type == literal)
+            {
+                newStack.value = Shadow_WREG.value;
+            }
+            else
+            {
+                newStack.ArgumentName = Shadow_WREG.REG.Reg;
+            }
             
-            newStack.value = previousMovlwValue;
-            newStack.type = INTEGER;
+            
             if(strstr(Instruction,"CLRF"))
             {
-                previousMovlwValue = 0;
+                Shadow_WREG.value = 0;
                 newStack.value = 0;
             }
             else if(strstr(Instruction,"MOVFF"))
             {
-                previousMovlwValue = 0;
+                Shadow_WREG.value = 0;
                 
                 size_t point1 = strstr(Instruction,"MOVFF")-Instruction + strlen("MOVFF") + 1;
                 
@@ -119,12 +130,13 @@ void watchFunctionStacks(char* Instruction,Converted_Assembly_Code &OutputAssemb
                 temp[point2-point1] = 0;
                 
                 newStack.ArgumentName = temp;
-                newStack.type = REGISTER;
+                newStack.type = FuncionArgumentTypes::RAM;
             }
             else if(strstr(Instruction,"SETF"))
             {
-                previousMovlwValue = 0xff;
+                Shadow_WREG.value = 0xff;
                 newStack.value = 0xff;
+                newStack.type = literal;
             }
             
             inputArguments.push_back(newStack);
@@ -155,7 +167,7 @@ void watchFunctionStacks(char* Instruction,Converted_Assembly_Code &OutputAssemb
             {
                 snprintf(&COMMENT[strlen(COMMENT)], sizeof(COMMENT) - strlen(COMMENT), "%s", ",");
             }
-            if(it.type == INTEGER)
+            if(it.type == literal)
             {
                 char temp[10] ;
                 
@@ -174,6 +186,13 @@ void watchFunctionStacks(char* Instruction,Converted_Assembly_Code &OutputAssemb
         OutputAssemblyCode.CommentAddress.push_back((uint32_t)OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM.size());
         
         inputArguments.clear();
+    }
+    else if (strstr(Instruction,"PLUS"))
+    {
+        if(strstr(Instruction,"MOVFF")==NULL)
+        {
+            // check last movlw
+        }
     }
 }
 
@@ -196,3 +215,14 @@ void HighlightFSRs(Converted_Assembly_Code &OutputAssemblyCode)
         }
     }
 }
+/*void highlightLocalVariables(Converted_Assembly_Code &OutputAssemblyCode)
+{
+    for (auto it : ListOfFunctionCalls)
+    {
+        for(size_t index = it.address_of_call; index< OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM.size() ; index++)
+        {
+            
+        }
+    }
+}
+*/
