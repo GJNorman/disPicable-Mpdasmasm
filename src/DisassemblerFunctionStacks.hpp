@@ -14,22 +14,30 @@
 #include <vector>
 #include "AssemblerFilePreprocessing.hpp"
 #include "EQUs.hpp"
+
+enum FuncionArgumentTypes{
+    literal = 0,
+    RAM = 1
+};
+
 typedef struct{
-    uint8_t type;               // int, register etc.
+    uint8_t type;               // literal, RAM register etc.
     uint16_t value;
     std::string ArgumentName;
 }FunctionStack_t;
 
-enum FuncionArgumentTypes{
-    INTEGER = 0,
-    REGISTER = 1,
-};
-
-
 typedef struct{
     std::string Reg;
-    uint32_t address;
+    uint32_t address;    
 }RegistersTracker_t;
+
+typedef struct{
+    uint8_t value;          // literal value
+    uint8_t bank;           // ram bank of address
+    uint8_t type;           // literal or register
+    RegistersTracker_t REG; // for registers
+}WREG_Follower_t;
+
 
 typedef struct{
     uint32_t address_of_call;
