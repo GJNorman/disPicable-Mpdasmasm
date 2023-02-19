@@ -139,11 +139,11 @@ including files
 
 you will need to include a header file from the relevant microcontroller
 
-#include 'pic18xyz.inc'
+    #include 'pic18xyz.inc'
 
 #### EQU
 
-MyVar  equ    0x100
+    MyVar  equ    0x100
 
 #### Comments
 
@@ -169,7 +169,7 @@ To compare the original hex file with the reassembled one
 
     disPicable cmp original.hex generated.hex
     
-note: you will need to provide the "i.inc" file yourself (it can be aquired from MPLAB for example)
+note: you will need to provide the ".inc" file yourself (it can be aquired from MPLAB for example)
 
 #### Prompt
 
@@ -179,4 +179,11 @@ The program will search the working directory for files that have extensions ".i
 #### Output
 
 The program will create a file called "DisassembledCode.asm" or "AssembledCode.hex" in the working directory
+
+#### Building
+
+CmakeLists.txt file is provided
+
+A tutorial can be found here
+https://code.visualstudio.com/docs/cpp/cmake-linux
 
