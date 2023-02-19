@@ -7,7 +7,11 @@
 
 #include "DisassembleSingleword.hpp"
 
-void disassemble_with_PIC18f_SingleWord(uint16_t MachineCode_byte, PIC18F_FULL_IS &Instruction_Set,uint8_t IS_Pos,char*&command_for_prompt, uint32_t program_counter)
+void disassemble_with_PIC18f_SingleWord(uint16_t MachineCode_byte,
+                                        PIC18F_FULL_IS &Instruction_Set,
+                                        uint8_t IS_Pos,
+                                        char*&command_for_prompt,
+                                        uint32_t program_counter)
 {
     uint8_t CASE_TYPE = Instruction_Set.PIC18F_OPCODES_DECODE_CASE[IS_Pos];
     std::string opcode_mnem = Instruction_Set.PIC18F_MNEMONICS[IS_Pos];
@@ -41,10 +45,12 @@ void disassemble_with_PIC18f_SingleWord(uint16_t MachineCode_byte, PIC18F_FULL_I
                 
             }
         }
+
     }
     int32_t n =0;
     uint8_t b=0, s=0;
     char temp[100];
+    std::string BitName;
     switch(CASE_TYPE)
     {
         case PIC18F_FDA_CASE:
@@ -63,7 +69,10 @@ void disassemble_with_PIC18f_SingleWord(uint16_t MachineCode_byte, PIC18F_FULL_I
             break;
         case PIC18F_BIT_CASE:
             find_opcode_parameters(MachineCode_byte,b, a, f, 0b1110,0b1,0xff, 1,Access_or_bank_RAM);
-            snprintf(temp,sizeof(temp),"%s %s, %u, %c", opcode_mnem.c_str(),f_stand_in,b,Access_or_bank_RAM);
+            
+            // convert b to a string
+            BitName = findEQUBitForDisassembler(b);
+            snprintf(temp,sizeof(temp),"%s %s, %s, %c", opcode_mnem.c_str(),f_stand_in,BitName.c_str(),Access_or_bank_RAM);
             break;
         case PIC18F_LIT_CASE:
             snprintf(temp,sizeof(temp),"%s %s", opcode_mnem.c_str(),f_stand_in);

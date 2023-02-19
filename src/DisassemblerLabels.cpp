@@ -40,7 +40,7 @@ void addLabeltoBranchingInstruction(Converted_Assembly_Code &OutputAssemblyCode,
 
     char *comment = copy_out_substring(p2,strlen(command_for_prompt),command_for_prompt);
 
-    char *Addr= copy_out_substring(x,p2,command_for_prompt);
+    char *Addr = copy_out_substring(x,p2,command_for_prompt);
 
     OutputAssemblyCode.LABEL_POSITIONS.push_back(strtol(Addr, NULL, 16)/2);
 

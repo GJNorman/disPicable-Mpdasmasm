@@ -76,26 +76,33 @@ void watchFunctionStacks(char* Instruction,Converted_Assembly_Code &OutputAssemb
     
     uint32_t CurrentAddress = (uint32_t)OutputAssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM.size();
     setFunctionRegisterList(firstCall,(uint32_t)strtol(OutputAssemblyCode.Address[OutputAssemblyCode.Address.size()-1].c_str(),NULL,16));
-                            
-    if(strstr(Instruction,"MOVLW"))
-    {
-        size_t point1 = strstr(Instruction,"MOVLW")-Instruction + strlen("MOVLW") + 1;
         
-        Shadow_WREG.value =strtol(&Instruction[point1], NULL, 16);
-        Shadow_WREG.type = FuncionArgumentTypes::literal;
-    }
-    else if(strstr(Instruction,"MOVF "))
-    {
-        size_t point1 = strstr(Instruction,"MOVF")-Instruction + strlen("MOVF") + 1;
+    
+    // track changes made to the working register
+        if(strstr(Instruction,"MOVLW"))
+        {
+            size_t point1 = strstr(Instruction,"MOVLW")-Instruction + strlen("MOVLW") + 1;
+            
+            Shadow_WREG.value =strtol(&Instruction[point1], NULL, 16);
+            Shadow_WREG.type = FuncionArgumentTypes::literal;
+        }
+        else if(strstr(Instruction,"MOVF "))
+        {
+            if(strstr(Instruction, ", 0,"))  // destination bit - zero indicates WREG as destination
+            {
+                size_t point1 = strstr(Instruction,"MOVF")-Instruction + strlen("MOVF") + 1;
+                
+                size_t point2 = strstr(&Instruction[point1], ",")-Instruction;
+                char temp[point2-point1+1];
+                strncpy(temp,&Instruction[point1],point2-point1);
+                temp[point2-point1] = 0;
+                
+                Shadow_WREG.REG.Reg = temp;
+                Shadow_WREG.type = FuncionArgumentTypes::RAM;
+            }
+        }
         
-        size_t point2 = strstr(&Instruction[point1], ",")-Instruction;
-        char temp[point2-point1+1];
-        strncpy(temp,&Instruction[point1],point2-point1);
-        temp[point2-point1] = 0;
-        
-        Shadow_WREG.REG.Reg = temp;
-        Shadow_WREG.type = FuncionArgumentTypes::RAM;
-    }
+    // monitor stack loading
     if(strstr(Instruction,"POSTINC"))
     {
         if(strstr(Instruction,"FSR") == NULL)   // MOVFF FSR2, POSTINC1  ; this would indicate a context save, not stack loading
@@ -187,11 +194,14 @@ void watchFunctionStacks(char* Instruction,Converted_Assembly_Code &OutputAssemb
         
         inputArguments.clear();
     }
-    else if (strstr(Instruction,"PLUS"))
+    // PLUSW1/2/3 will tell us how input arguments loaded onto FSR's are being parsed from the stack
+    else if (strstr(Instruction,"PLUSW"))
     {
         if(strstr(Instruction,"MOVFF")==NULL)
         {
             // check last movlw
+            
+            
         }
     }
 }

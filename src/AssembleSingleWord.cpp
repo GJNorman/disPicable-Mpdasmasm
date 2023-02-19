@@ -69,6 +69,7 @@ void assemble_single_word_case(const char *Assembly_Instruction,PIC18F_FULL_IS &
         a = find_a_value_for_assembly(Assembly_Instruction,Instruction_Set, pos, a_offset) & 1;
     }
 
+    
     uint16_t OPCODE = Instruction_Set.PIC18F_OPCODES_LOWER_VAL[pos] + (d_or_b<<9) + (a<<8) + (f & f_mask);
 
     output_Machine_Code("%.2X%.2X",(OPCODE&0xff),((0xff00&OPCODE)>>8));  //little endian

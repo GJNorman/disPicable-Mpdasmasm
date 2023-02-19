@@ -7,31 +7,29 @@
 
 #include "DisassemblerRamTracker.hpp"
 
-std::vector<std::vector<uint8_t>> RAM_DATA;
-
-void initRamTracker(size_t NumberOfRamBanks)
+void RAMTracker::initRamTracker(size_t NumberOfRamBanks)
 {
-    RAM_DATA.resize(NumberOfRamBanks);
+    this->Contents.resize(NumberOfRamBanks);
     
-    for(size_t index=0; index<NumberOfRamBanks;index++)
+    for(uint8_t index=0; index< NumberOfRamBanks; index++)
     {
-        RAM_DATA[index].resize(255);
+        this->Contents[index].resize(256);
     }
 }
-void setRam(uint16_t address, uint8_t value)
+void RAMTracker::setRam(uint16_t address, uint8_t value)
 {
-    RAM_DATA[(address>>8)&0xff][address&0xff] = value;
+    this->Contents[(address>>8)&0xff][address&0xff] = value;
 }
-void setRam(uint8_t address, uint8_t bank, uint8_t value)
+void RAMTracker::setRam(uint8_t address, uint8_t bank, uint8_t value)
 {
-    RAM_DATA[bank][address] = value;
+    this->Contents[bank][address] = value;
 }
 
-uint8_t getRam(uint16_t address)
+uint8_t RAMTracker::getRam(uint16_t address)
 {
-    return RAM_DATA[(address>>8)&0xff][address&0xff];
+    return this->Contents[(address>>8)&0xff][address&0xff];
 }
-uint8_t getRam(uint8_t address, uint8_t bank)
+uint8_t RAMTracker::getRam(uint8_t address, uint8_t bank)
 {
-    return RAM_DATA[bank][address];
+    return this->Contents[bank][address];
 }

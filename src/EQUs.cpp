@@ -111,6 +111,7 @@ void addNewEQU(std::string Assembly_Instruction)
     }
 }
 
+static size_t LastAccessEquOffset = 0;
 
 // take a register address from a "FILE" command and return the associated "EQU"
 std::string processEQUforDisassembler(uint32_t regAddress, uint32_t mask)
@@ -121,9 +122,10 @@ std::string processEQUforDisassembler(uint32_t regAddress, uint32_t mask)
     snprintf(temp,sizeof(temp),"0x%x",regAddress&mask);
     
     MostRecentEQU = temp;
-    
+    LastAccessEquOffset = 0;
     for(auto Equis: EQU_List)
     {
+        
         uint32_t address = strtol(Equis.Address.c_str(),NULL,16) &0xffffff;
         
         if(address == regAddress)
@@ -134,14 +136,39 @@ std::string processEQUforDisassembler(uint32_t regAddress, uint32_t mask)
                 MostRecentEQU = Equis.Tag;
                 break;
             }
+            
+            
         }
+        LastAccessEquOffset++;
     }
     
     return MostRecentEQU;
 }
+std::string findEQUBitForDisassembler(int bitNum)
+{
+    std::string returnValue;
+    
+    char temp[10];
+    
+    snprintf(temp, sizeof(temp), "%u", bitNum);
+    
+    returnValue = temp;
+    for(size_t index=0; index<EQU_List[LastAccessEquOffset].bitfields.size(); index++)
+    {
+        if(bitNum == strtol(EQU_List[LastAccessEquOffset].bitfieldAddresses[index].c_str(), NULL,16))
+        {
+            returnValue=EQU_List[LastAccessEquOffset].bitfields[index];
+            
+            break;
+        }
+    }
+
+    return returnValue;
+}
 // take a variable name and return the address
 uint32_t processEQUforAssembler(std::string RegisterName)
 {
+    LastAccessEquOffset = 0;
     for(auto Equis: EQU_List)
     {
         if(Equis.Tag.size() == RegisterName.size())
@@ -151,11 +178,33 @@ uint32_t processEQUforAssembler(std::string RegisterName)
                 MostRecentEQU = Equis.Tag;
                 //replace with the register ID
                 uint32_t address = strtol(Equis.Address.c_str(),NULL,16) &0xffffff;
-                
                 return address;
             }
         }
+        LastAccessEquOffset++;
     }
     
     return ~0;
+}
+uint32_t processEQUBitForAssembler(std::string BitName)
+{
+    uint32_t bitNum = strtol(BitName.c_str(), NULL, 16) &0xffffff;
+
+    for(size_t index=0; index<EQU_List[LastAccessEquOffset].bitfields.size(); index++)
+    {
+        
+        if(EQU_List[LastAccessEquOffset].bitfields[index].size() == BitName.size())
+        {
+            
+            if(strncmp(EQU_List[LastAccessEquOffset].bitfields[index].c_str(),BitName.c_str(),EQU_List[LastAccessEquOffset].bitfields[index].size())==0)
+            {
+                
+                bitNum =  strtol(EQU_List[LastAccessEquOffset].bitfieldAddresses[index].c_str(), NULL,16) &0xffffff;
+                
+                break;
+            }
+        }
+    }
+
+    return bitNum;
 }

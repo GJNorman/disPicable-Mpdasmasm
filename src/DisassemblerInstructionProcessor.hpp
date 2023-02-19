@@ -19,21 +19,23 @@
 #include "DisassemblerFunctionStacks.hpp"
 #include "DisassemblerLabels.hpp"
 #include "PIC18_IS.h"
-void generate_asm(std::vector<uint8_t> &MachineCode,
-                  uint32_t &address,
-                  std::vector<unsigned char> &HEX_FILE_CONTENTS,
-                  uint64_t file_position,
-                  bool &final_byte_is_double_word,
-                  Converted_Assembly_Code &OutputAssemblyCode,
-                  PIC18F_FULL_IS &Instruction_Set,
-                  bool bdisplayASM,
-                  bool bDisplayBinContents,
-                  uint16_t Address_Upper_16_bits);
 
-void finalise_command(char *&command_for_prompt,
-                      Converted_Assembly_Code &OutputAssemblyCode,
-                      const char *Description,
-                      uint16_t Address_Upper_16_bits,
-                      uint32_t device_mem_size,
-                      uint16_t n );
+// generate assembly instructiond from OPCODEs
+void generate_asm(std::vector<uint8_t> &MachineCode,                // data from Hex file
+                  uint32_t &address,                                // current program address
+                  std::vector<unsigned char> &HEX_FILE_CONTENTS,    // entire contents of hex file, in case we need to check the next word
+                  uint64_t file_position,                           // current hex file offset
+                  Converted_Assembly_Code &OutputAssemblyCode,      // output for Assembly code
+                  PIC18F_FULL_IS &Instruction_Set,                  // Pic instruction set
+                  bool bdisplayASM,                                 // debugging - display assembly output
+                  bool bDisplayBinContents,                         // debugging - display opcode input
+                  uint16_t Address_Upper_16_bits);                  // upper 16 bits of current address
+
+// add final formatting before pushing to output
+void finalise_command(char *&command_for_prompt,                    // buffer for current instruction
+                      Converted_Assembly_Code &OutputAssemblyCode,  // holds entire output program
+                      const char *Description,                      // Comment that describes what the instruction does
+                      uint16_t Address_Upper_16_bits,               // upper 16 bits of address
+                      uint32_t device_mem_size,                     // total available flash memory
+                      uint16_t n );                                 // opcode
 #endif /* DisassemblerInstructionProcessor_hpp */

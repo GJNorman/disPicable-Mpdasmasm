@@ -41,10 +41,12 @@ void addNewEQU(std::string Assembly_Instruction);
 // returns the address if successful, otherwise ~0
 uint32_t processEQUforAssembler(std::string RegisterName);
 
+uint32_t processEQUBitForAssembler(std::string BitName);
+
 //convert a register address into a variable name
 std::string processEQUforDisassembler(uint32_t regAddress, uint32_t mask);
 
-
+std::string findEQUBitForDisassembler(int bitNum);
 // std::cout EQU_list_t vector
 void printEQUs();
 

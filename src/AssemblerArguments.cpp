@@ -170,7 +170,14 @@ uint8_t find_d_value_for_assembly(const char *Assembly_Instruction,PIC18F_FULL_I
         optionalArgumentPresent = true;
         if(strstr(d_prm,"0x")==NULL)
         {
-            d_or_b = strtol(d_prm, NULL, 16);
+            
+            // check for a bitfield
+            std::string temp = d_prm;
+            
+            RemoveLeadingSpaces(temp, 0);
+            
+            d_or_b = 0xff &processEQUBitForAssembler(temp);
+
         }
         else
         {
