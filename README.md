@@ -46,15 +46,15 @@ The displayed values are in hex and ascii
 
 This can be helpful for quickly estimating the purpose of a function
 
-It works by monitoring the use of software stacks (i.e.  POSTINCx SFRs). If the code uses other register for passing arguments, this is not detected
+It works by monitoring the use of software stacks (i.e.  POSTINCx SFRs). If the code uses other registers for passing arguments, this is not detected
 
 If the function being called uses any SFRs, this will also be indicated
 
 <img width="720" alt="Screenshot 2023-02-19 at 3 47 06 pm" src="https://user-images.githubusercontent.com/113757511/219922818-8b1f347a-c13b-45ca-a9bb-60808d99e83c.png">
 
-you can see here that the function must be transmitting '\r' over UART (TXREG)
+You can see here that the function must be transmitting '\r' over UART (TXREG)
 
-A header will appear above each function indicating which register are used
+A header will appear above each function indicating which registers are used
 
 <img width="662" alt="Screenshot 2023-02-19 at 3 46 25 pm" src="https://user-images.githubusercontent.com/113757511/219922831-21560187-541d-490b-bd91-839b98c90f44.png">
 
@@ -63,7 +63,7 @@ A header will appear above each function indicating which register are used
 
 <img width="548" alt="Screenshot 2023-02-11 at 12 36 26 pm" src="https://user-images.githubusercontent.com/113757511/218231794-0c27df40-8520-432c-ae71-efbcd1feea40.png">
 
-you can see that these nonsense commands are actually ascii data '3.' 
+You can see that these nonsense commands are actually ascii data '3.' 
 
 ### Assembler
 The Assembler can successfully re-assemble the disassembled hex file. It can also process brand new .asm files, but is not yet fully comptaible with MPLAB's assembler. 
@@ -92,7 +92,7 @@ Note - while we lost the symbolic label for the table pointer, we retained the B
 
 #### Instruction set
 
-The program is compatible with all 75 PIC18 single and souble word instructions; including with optional arguments. 
+The program is compatible with all 75 PIC18 single and double word instructions; including with optional arguments. 
 
 It does not have support for the extended IS or triple word instructions (i.e. MOVFFL)
 
@@ -101,9 +101,11 @@ It does not have support for the extended IS or triple word instructions (i.e. M
 
  - Hex notation is supported, examples 0x37, h'37
 
- - decimal notation is supported, examples 0d37, d'37
+ - Decimal notation is supported, examples 0d37, d'37
  
- - binary notaiton is supported, examples 0b1101, b'1101
+ - Binary notation is supported, examples 0b1101, b'1101
+
+Any bare number is assumed to be hexadecimal 
 
 #### ORG directive
 
@@ -129,13 +131,13 @@ so if you were to read "label" until TABLAT == 0, you would read "Hello World"
 
 #### Preprocessor
 
-limited support for C-Style Macros
+Limited support for C-Style Macros
 
     #define SUM(x,y)  MOVFW x, BANKSEL(x)\
  
                      ADDFW y, f, BANKSEL(y)
 
-including files
+Including files
 
 you will need to include a header file from the relevant microcontroller
 
@@ -153,7 +155,7 @@ and supports multiline comments using /*  */
 
 ### How to use
 
-you can either use command line arguments to specificy files/functionality or else have the program present a prompt
+You can either use command line arguments to specificy files/functionality or else have the program present a prompt
 
 #### Command line arguments
 
