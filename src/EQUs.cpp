@@ -11,6 +11,9 @@
 static std::vector<EQU_list_t> EQU_List;
 std::string MostRecentEQU;                  // the last EQU found in the list from either the disassembler or assembler
 
+static size_t LastAccessEquOffset = 0;      // records vector position of MostRecentEQU
+
+
 std::string getMostRecentEQU()
 {
     return MostRecentEQU;
@@ -110,13 +113,9 @@ void addNewEQU(std::string Assembly_Instruction)
         }
     }
 }
-
-static size_t LastAccessEquOffset = 0;
-
 // take a register address from a "FILE" command and return the associated "EQU"
 std::string processEQUforDisassembler(uint32_t regAddress, uint32_t mask)
 {
-
     char temp[10];
     
     snprintf(temp,sizeof(temp),"0x%x",regAddress&mask);
@@ -125,7 +124,6 @@ std::string processEQUforDisassembler(uint32_t regAddress, uint32_t mask)
     LastAccessEquOffset = 0;
     for(auto Equis: EQU_List)
     {
-        
         uint32_t address = strtol(Equis.Address.c_str(),NULL,16) &0xffffff;
         
         if(address == regAddress)
@@ -136,12 +134,9 @@ std::string processEQUforDisassembler(uint32_t regAddress, uint32_t mask)
                 MostRecentEQU = Equis.Tag;
                 break;
             }
-            
-            
         }
         LastAccessEquOffset++;
     }
-    
     return MostRecentEQU;
 }
 std::string findEQUBitForDisassembler(int bitNum)
@@ -184,7 +179,8 @@ uint32_t processEQUforAssembler(std::string RegisterName)
         LastAccessEquOffset++;
     }
     
-    return ~0;
+    // assume this is jsut a literal value
+    return strtol(RegisterName.c_str(),NULL,16) &0xffffff;
 }
 uint32_t processEQUBitForAssembler(std::string BitName)
 {

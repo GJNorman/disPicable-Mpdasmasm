@@ -130,8 +130,8 @@ void find_FILE_values_for_assembly(const char *Assembly_Instruction,PIC18F_FULL_
     char FS[strlen(temp)-p1+1] ;
     snprintf(FS,(strlen(temp)-p1+1),"%s",&temp[p1]);
     
-    fs = check_if_FSR_or_RAW_REG(FS,Instruction_Set);
-    fd = check_if_FSR_or_RAW_REG(&FD[spaces],Instruction_Set);
+    fs = check_if_SFR_or_RAW_REG(FS,Instruction_Set);
+    fd = check_if_SFR_or_RAW_REG(&FD[spaces],Instruction_Set);
     
     free(FD);
 

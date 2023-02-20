@@ -13,22 +13,22 @@ void add_to_checksum(uint16_t OPCODE, uint16_t &checksum)
     checksum+=((0xff00&OPCODE)>>8)&0xff;
 }
 
-bool increment_assembler_address(uint16_t &upper_16_bits, uint32_t &lower_32_bits,uint16_t &check_sum, bool &check_sum_required, uint32_t FLASH_size)
+bool increment_assembler_address(Address_And_Checksum_t &Address, uint32_t FLASH_size)
 {
-    if(lower_32_bits <= FLASH_size)
+    if(Address.lower_32_bits <= FLASH_size)
     {
-        lower_32_bits+=2;
+        Address.lower_32_bits+=2;
     }
     else    //eeprom addresses
     {
-        upper_16_bits+=0xF0;
-        lower_32_bits=0;
+        Address.upper_16_bits+=0xF0;
+        Address.lower_32_bits=0;
 
         uint16_t EEPROM_checksum = 0x2 +0x4;
-        add_to_checksum(upper_16_bits,EEPROM_checksum);
-        output_Machine_Code("%.2X\r\n:02000004%.4X%.2X",(1+(~check_sum)) & 0xff,upper_16_bits,(1+(~EEPROM_checksum)) & 0xff);
-        check_sum_required=false;
-        check_sum=0;
+        add_to_checksum(Address.upper_16_bits,EEPROM_checksum);
+        output_Machine_Code("%.2X\r\n:02000004%.4X%.2X",(1+(~Address.check_sum)) & 0xff,Address.upper_16_bits,(1+(~EEPROM_checksum)) & 0xff);
+        Address.check_sum_required=false;
+        Address.check_sum=0;
         return true;
     }
     return false;
@@ -37,43 +37,46 @@ bool increment_assembler_address(uint16_t &upper_16_bits, uint32_t &lower_32_bit
 
 // header will specifier address and number of databytes
 // we will always write a complete line, so num_bytes = 0x10
-void formatHexHeader(char *header, bool &check_sum_required,uint16_t &check_sum, uint32_t &address)
+void formatHexHeader(char *header,Address_And_Checksum_t &Address)
 {
     constexpr uint16_t headerMaxSize = 20;
-    if(address!=0)
+    if(Address.lower_32_bits!=0)
     {
-        if(check_sum_required==true)    // checksum is from the previous line
-            snprintf(header,headerMaxSize,"%.2X\r\n:10%.4X00",(1+(~check_sum))&0xff,address&0xffff);
+        if(Address.check_sum_required==true)    // checksum is from the previous line
+            snprintf(header,headerMaxSize,"%.2X\r\n:10%.4X00",(1+(~Address.check_sum))&0xff,Address.lower_32_bits&0xffff);
         else
-            snprintf(header,headerMaxSize,"\r\n:10%.4X00",address&0xffff);
+            snprintf(header,headerMaxSize,"\r\n:10%.4X00",Address.lower_32_bits&0xffff);
         
-        check_sum_required=true;
+        Address.check_sum_required=true;
     }
     
     else    //no checksum
     {
-        snprintf(header,headerMaxSize,"\r\n:10%.4X00",address&0xffff);
+        snprintf(header,headerMaxSize,"\r\n:10%.4X00",Address.lower_32_bits&0xffff);
     }
 }
-void padFile(uint32_t &address, uint16_t &check_sum,bool &check_sum_required)
+
+// finish the current line of the hex file with NOPs
+void padFile(Address_And_Checksum_t &Address)
 {
     bool lineAdded=false;
-    if(check_sum_required == true)
+    if(Address.check_sum_required == true)
     {
-        output_Machine_Code("%.2X",(1+(~check_sum))&0xff);
-        check_sum=0;
-        check_sum_required = false;
+        output_Machine_Code("%.2X",(1+(~Address.check_sum))&0xff);
+        Address.check_sum=0;
+        Address.check_sum_required = false;
     }
-    while(address%16 != 0)
+    while(Address.lower_32_bits%16 != 0)
     {
         output_Machine_Code("%s","FFFF");
-        add_to_checksum(0xffff, check_sum);
-        address+=2;
+        add_to_checksum(0xffff, Address.check_sum);
+        
+        Address.lower_32_bits+=2;
         lineAdded=true;
     }
     if(lineAdded==true)
     {
-        output_Machine_Code("%.2X",(1+(~check_sum))&0xff);
-        check_sum=0;
+        output_Machine_Code("%.2X",(1+(~Address.check_sum))&0xff);
+        Address.check_sum=0;
     }
 }

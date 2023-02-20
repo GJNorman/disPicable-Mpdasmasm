@@ -125,7 +125,7 @@ uint32_t find_f_value_for_assembly(const char *Assembly_Instruction,PIC18F_FULL_
         }
         else
         {
-            f=convert_FSR_for_assembler(f_prm,Instruction_Set,0);
+            f=convert_SFR_for_assembler(f_prm,Instruction_Set,0);
         }
 
     }
@@ -168,7 +168,7 @@ uint8_t find_d_value_for_assembly(const char *Assembly_Instruction,PIC18F_FULL_I
     if(d_prm!=NULL)
     {
         optionalArgumentPresent = true;
-        if(strstr(d_prm,"0x")==NULL)
+        if(strstr(d_prm,"0x")==NULL)    // not a literal
         {
             
             // check for a bitfield
@@ -176,7 +176,7 @@ uint8_t find_d_value_for_assembly(const char *Assembly_Instruction,PIC18F_FULL_I
             
             RemoveLeadingSpaces(temp, 0);
             
-            d_or_b = 0xff &processEQUBitForAssembler(temp);
+            d_or_b = 0xff & processEQUBitForAssembler(temp);
 
         }
         else
@@ -238,6 +238,11 @@ uint8_t find_a_value_for_assembly(const char *Assembly_Instruction,PIC18F_FULL_I
 }
 
 /*###################################################################################
+ LFSR 2, 0x500
+ 
+ where '2' means FSR2
+ 
+ and 0x500 is the 16-bit memory address
  
  ###################################################################################*/
 uint8_t find_LFSR_f_value(const char *Assembly_Instruction)
@@ -253,28 +258,18 @@ uint8_t find_LFSR_f_value(const char *Assembly_Instruction)
     return f;
 }
 /*###################################################################################
- 
+ find FSR from EQU
  ###################################################################################*/
-uint16_t check_if_FSR_or_RAW_REG(const char *REGISTER,PIC18F_FULL_IS & Instruction_Set)
+uint16_t check_if_SFR_or_RAW_REG(const char *REGISTER,PIC18F_FULL_IS & Instruction_Set)
 {
-    uint16_t value = 0;
-
-    // register written as raw address
-    if(strstr(REGISTER,"0x"))
-    {
-        value = strtol(REGISTER,NULL,16);
-    }
-    else
-    {
-        value = convert_FSR_for_assembler(REGISTER,Instruction_Set,0xf00);
-    }
+    uint16_t value = convert_SFR_for_assembler(REGISTER,Instruction_Set,0xf00);
 
     return value;
 }
 /*###################################################################################
  
  ###################################################################################*/
-uint32_t convert_FSR_for_assembler(const char *SFR_REG,PIC18F_FULL_IS & Instruction_Set, uint32_t offset)
+uint32_t convert_SFR_for_assembler(const char *SFR_REG,PIC18F_FULL_IS & Instruction_Set, uint32_t offset)
 {
     // remove leading white space
     size_t p1=CheckForLeadingSpaces(SFR_REG,0);
@@ -336,8 +331,6 @@ uint32_t convert_FSR_for_assembler(const char *SFR_REG,PIC18F_FULL_IS & Instruct
         return f;
     }
     // compare to the list of MCU registers and user variables
-    //counter =0 ;
-    
     std::string temp = &SFR_REG[p1];
     uint32_t temp_f = processEQUforAssembler(temp);
     if(temp_f != ~0)

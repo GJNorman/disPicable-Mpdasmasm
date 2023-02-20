@@ -32,6 +32,7 @@ void disassemble_with_PIC18f_SingleWord(uint16_t MachineCode_byte,
     {
         if((CASE_TYPE==PIC18F_FDA_CASE)||(CASE_TYPE==PIC18F_FA_CASE)||(CASE_TYPE==PIC18F_BIT_CASE))
         {
+            std::string RegisterName = processEQUforDisassembler(f, 0xff);
             if(f>0x5f)  // indicates special function registers
             {
                 f+=0xf00;

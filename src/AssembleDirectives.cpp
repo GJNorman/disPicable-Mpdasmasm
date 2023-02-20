@@ -11,41 +11,25 @@
 // EEPROM, config bits etc.
 void assemble_non_program_data(uint16_t REG_VALUE,
                                const char *Assembly_Instruction,
-                               uint32_t &address,
-                               uint16_t &address_upper_16bits,
-                               uint16_t &checksum,
-                               bool &check_sum_required,
-                               uint32_t FLASH_size,
+                               Address_And_Checksum_t &Address,
                                bool IsEEPROM);
 
 // process eeprom directive
 void assemble_EEPROM_data(uint16_t EEPROM_START_ADD_U16,
                           const char *Assembly_Instruction,
-                          uint32_t &address,
-                          uint16_t &address_upper_16bits,
-                          uint16_t &checksum,
-                          bool &check_sum_required,
-                          uint32_t FLASH_size);
+                          Address_And_Checksum_t &Address);
 
 
 // process ORG directive
-void processORG(uint32_t &address,
-                std::string Assembly_Instruction,
-                uint32_t &START_ADDRESS,
-                uint16_t &check_sum);
+void processORG(std::string Assembly_Instruction,
+                Address_And_Checksum_t &Address);
 
 void  assemble_DB(std::string Assembly_Instruction,
-                  uint16_t address_upper_16bits,
-                  uint32_t &address,
-                  uint16_t &check_sum,
-                  bool &check_sum_required,
+                  Address_And_Checksum_t &Address,
                   PIC18F_FULL_IS &Instruction_Set);
 
 void assemble_UnknownOrDB(uint16_t value,
-                          uint16_t address_upper_16bits,
-                          uint32_t &address,
-                          uint16_t &check_sum,
-                          bool &check_sum_required,
+                          Address_And_Checksum_t &Address,
                           PIC18F_FULL_IS &Instruction_Set );
 
 // for lines that include a ':' character, we read until
@@ -72,12 +56,9 @@ static char *GrabLabelledData(const char* Assembly_Instruction)
     return temp;
 }
 void processDirective(std::string Assembly_Instruction,
-                      uint32_t &address,
-                      bool &check_sum_required,
-                      uint16_t &check_sum,
-                      PIC18F_FULL_IS &Instruction_Set,
-                      uint16_t &address_upper_16bits,
-                      uint32_t &START_ADDRESS)
+                      Address_And_Checksum_t &Address,
+                      PIC18F_FULL_IS &Instruction_Set
+                      )
 {
     
     // usually due to ascii data, or maybe code to be trasnferred to some other kind of chip
@@ -87,45 +68,48 @@ void processDirective(std::string Assembly_Instruction,
 
         uint16_t value=strtol(unknown_command,NULL,16);
         
-        assemble_UnknownOrDB(value, address_upper_16bits, address, check_sum,check_sum_required,Instruction_Set );
+        assemble_UnknownOrDB(value, Address,Instruction_Set );
 
         free(unknown_command);
     }
     else if(strstr(Assembly_Instruction.c_str(),"ORG"))
     {
-        processORG(address, Assembly_Instruction, START_ADDRESS,check_sum);
+        processORG( Assembly_Instruction, Address);
     }
     else if(strstr(Assembly_Instruction.c_str(),"DEVICE_ID"))
     {
-        assemble_non_program_data(Instruction_Set.Device_ID_Address, Assembly_Instruction.c_str(),address,address_upper_16bits, check_sum,check_sum_required,Instruction_Set.FLASH_size,false);
+        assemble_non_program_data(Instruction_Set.Device_ID_Address, Assembly_Instruction.c_str(),Address,false);
     }
     else if(strstr(Assembly_Instruction.c_str(),"CONFIG"))
     {
-        assemble_non_program_data(Instruction_Set.Config_Address, Assembly_Instruction.c_str(),address,address_upper_16bits, check_sum,check_sum_required,Instruction_Set.FLASH_size,false);
+        assemble_non_program_data(Instruction_Set.Config_Address, Assembly_Instruction.c_str(),Address,false);
     }
     else if((strstr(Assembly_Instruction.c_str(),"db"))||(strstr(Assembly_Instruction.c_str(),"DB")))
     {
-        assemble_DB(Assembly_Instruction, address_upper_16bits, address, check_sum, check_sum_required, Instruction_Set);
+        assemble_DB(Assembly_Instruction,Address, Instruction_Set);
     }
     else if(strstr(Assembly_Instruction.c_str(),"EEPROM_DIRECTIVE"))
     {
-        assemble_EEPROM_data(Instruction_Set.EEPROM_START_ADDR, Assembly_Instruction.c_str(), address,address_upper_16bits, check_sum, check_sum_required, Instruction_Set.FLASH_size);
+        assemble_EEPROM_data(Instruction_Set.EEPROM_START_ADDR, Assembly_Instruction.c_str(),Address);
     }
 }
 
-void assemble_non_program_data(uint16_t REG_VALUE, const char *Assembly_Instruction,  uint32_t &address,uint16_t &address_upper_16bits, uint16_t &checksum,bool &check_sum_required, uint32_t FLASH_size,bool IsEEPROM)
+void assemble_non_program_data(uint16_t REG_VALUE,
+                               const char *Assembly_Instruction,
+                               Address_And_Checksum_t &Address,
+                               bool IsEEPROM)
 {
 
     // to get here we must have finished the main program data, so finish the current line before continueing
-    padFile(address, checksum,check_sum_required);
+    padFile(Address);
     
 
     uint16_t check_sum = 0x2 +0x4 + REG_VALUE;
 
-    if(check_sum_required==true)
+    if(Address.check_sum_required==true)
     {
-        output_Machine_Code("%.2X\r\n:0200000400%.2X%.2X",(1+(~checksum)) & 0xff,REG_VALUE,(1+(~check_sum)) & 0xff);
-        checksum=0;
+        output_Machine_Code("%.2X\r\n:0200000400%.2X%.2X",(1+(~Address.check_sum)) & 0xff,REG_VALUE,(1+(~check_sum)) & 0xff);
+        Address.check_sum =0;
     }
 
     else
@@ -143,7 +127,7 @@ void assemble_non_program_data(uint16_t REG_VALUE, const char *Assembly_Instruct
     }
     check_sum+=(unsigned int)strlen(temp)/2;
     output_Machine_Code("\r\n:%.2X000000%s%.2X",(unsigned int)strlen(temp)/2,temp,(1+(~check_sum)) & 0xff);
-    check_sum_required=false;
+    Address.check_sum_required=false;
 
     free(temp);
 
@@ -151,7 +135,9 @@ void assemble_non_program_data(uint16_t REG_VALUE, const char *Assembly_Instruct
 }
 
 
-void assemble_EEPROM_data(uint16_t EEPROM_START_ADD_U16, const char *Assembly_Instruction, uint32_t &address,uint16_t &address_upper_16bits, uint16_t &checksum,bool &check_sum_required, uint32_t FLASH_size)
+void assemble_EEPROM_data(uint16_t EEPROM_START_ADD_U16,
+                          const char *Assembly_Instruction,
+                          Address_And_Checksum_t &Address)
 {
     static uint8_t first_eeprom_bank = 0;
     
@@ -160,7 +146,7 @@ void assemble_EEPROM_data(uint16_t EEPROM_START_ADD_U16, const char *Assembly_In
     {
         first_eeprom_bank=1;
         
-        padFile(address, checksum,check_sum_required);
+        padFile(Address);
         
         output_Machine_Code("\r\n:0200000400F00A");
     }
@@ -179,49 +165,56 @@ void assemble_EEPROM_data(uint16_t EEPROM_START_ADD_U16, const char *Assembly_In
         output_Machine_Code("%s",temp2);
     }
     output_Machine_Code("%.2X",(1+(~check_sum)) & 0xff);
-    check_sum_required=false;
+    Address.check_sum_required=false;
 
     free(temp);
 }
 
 
 // set current address according to ORG directive
-void processORG(uint32_t &address, std::string Assembly_Instruction, uint32_t &START_ADDRESS,uint16_t &check_sum)
+void processORG(std::string Assembly_Instruction,
+                Address_And_Checksum_t &Address)
+
 {
-    uint32_t temp_address = address;
+   // Address_And_Checksum_t temp_address = Address;
+    uint32_t temp_address = Address.lower_32_bits;
 
     char *ORG_address = return_substring(Assembly_Instruction.c_str(), "ORG", NULL, 0,strlen("ORG"), 0);
 
     if(ORG_address!=NULL)
     {
-        address = strtol(ORG_address,NULL,16)&0xffff;     ///copy ORG address into working address
-        START_ADDRESS = address;
+        temp_address = strtol(ORG_address,NULL,16)&0xffff;     ///copy ORG address into working address
+        Address.START_ADDRESS = temp_address;
         free(ORG_address);
     }
     else
     {
         std::cout << "Unable to Parse ORG \n";
     }
-    if(temp_address > address)
+    if(temp_address < Address.lower_32_bits)
     {
-        std::cout <<"Error on ORG - "  << Assembly_Instruction <<", whose address (" << temp_address << ") " << "is less than current Address: " <<address << std::endl;
+        std::cout <<"Error on ORG - "  << Assembly_Instruction <<", whose address (" << temp_address << ") " << "is less than current Address: " <<Address.lower_32_bits << std::endl;
+        
+        return;
     }
     // we will fill the space between the current address and the new ORG address with NOPs
-    while(temp_address !=address)
+    while(temp_address!=Address.lower_32_bits)
     {
-        bool checkSumRequired = false;
-        padFile(temp_address, check_sum,checkSumRequired);
+        Address.check_sum_required = false;
+        padFile(Address);
         
         // start of the next line
         output_Machine_Code(":10%.4X00",temp_address&0xffff);
-        check_sum = 10;
-        add_to_checksum(temp_address, check_sum);
+        Address.check_sum = 10;
+        add_to_checksum(temp_address, Address.check_sum);
     }
 }
 
-void assemble_UnknownOrDB(uint16_t value,uint16_t address_upper_16bits, uint32_t &address, uint16_t &check_sum,bool &check_sum_required,PIC18F_FULL_IS &Instruction_Set )
+void assemble_UnknownOrDB(uint16_t value,
+                          Address_And_Checksum_t &Address,
+                          PIC18F_FULL_IS &Instruction_Set )
 {
-    if(address % 16 !=0)
+    if(Address.lower_32_bits % 16 !=0)
     {
         output_Machine_Code("%.2X%.2X",value&0xff,(value>>8)&0xff);
     }
@@ -229,26 +222,28 @@ void assemble_UnknownOrDB(uint16_t value,uint16_t address_upper_16bits, uint32_t
     // we are at the end of the current line
     else
     {
-        if(check_sum_required==true)
+        if(Address.check_sum_required==true)
         {
-            output_Machine_Code("%.2X\r\n:10%.4X00",(1+(~check_sum))&0xff,address&0xffff);
+            output_Machine_Code("%.2X\r\n:10%.4X00",(1+(~Address.check_sum))&0xff,Address.lower_32_bits&0xffff);
         }
         else
         {
-            output_Machine_Code("\r\n:10%.4X00",address&0xffff);
+            output_Machine_Code("\r\n:10%.4X00",Address.lower_32_bits&0xffff);
         }
 
-        check_sum_required=true;
-        check_sum=0x10;
-        add_to_checksum(address, check_sum);
+        Address.check_sum_required=true;
+        Address.check_sum=0x10;
+        add_to_checksum(Address.lower_32_bits, Address.check_sum);
         output_Machine_Code("%.2X%.2X",value&0xff,(value>>8)&0xff);
 
     }
-    add_to_checksum(value, check_sum);
-    increment_assembler_address(address_upper_16bits,address,check_sum,check_sum_required,Instruction_Set.FLASH_size);
+    add_to_checksum(value, Address.check_sum);
+    increment_assembler_address(Address,Instruction_Set.FLASH_size);
 
 }
-void  assemble_DB(std::string Assembly_Instruction,uint16_t address_upper_16bits, uint32_t &address, uint16_t &check_sum,bool &check_sum_required,PIC18F_FULL_IS &Instruction_Set)
+void  assemble_DB(std::string Assembly_Instruction,
+                  Address_And_Checksum_t &Address,
+                  PIC18F_FULL_IS &Instruction_Set)
 {
     // [optional label]  DB  'x','y'
     //                   DB  "asdasd"
@@ -282,7 +277,7 @@ void  assemble_DB(std::string Assembly_Instruction,uint16_t address_upper_16bits
         
         for(uint8_t index=0; index<value.size() ;index++)
         {
-            assemble_UnknownOrDB(value[index], address_upper_16bits, address, check_sum, check_sum_required, Instruction_Set );
+            assemble_UnknownOrDB(value[index], Address, Instruction_Set );
         }
         nextComma = Assembly_Instruction.find(",",nextComma+1);
         

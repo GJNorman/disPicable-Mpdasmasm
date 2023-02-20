@@ -8,49 +8,48 @@
 #include "AssemblerFilePreprocessing.hpp"
 
 const char *DefineByteDirective = "DB ";
-std::string skip_inline_comments(std::string line_from_file,std::ifstream &input_file,char seperating_character, const char *CommentCharacter);
+void skip_inline_comments(std::string &line_from_file,                      // this will return the next non-commented out line
+                          std::ifstream &input_file                         // asm file contents
+                          );
 
-void process_binary_file_line(std::string &line,std::string &next_line,Converted_Assembly_Code &Machine_Code_File,PIC18F_FULL_IS &Instruction_Set, uint32_t &File_Position_Counter, bool &borrowed_byte_from_next_line,std::ifstream &input_file);
+void process_binary_file_line(std::string &line,                            // current instruction
+                              std::string &next_line,                       // next instruction - only used for 'DB'
+                              Converted_Assembly_Code &Machine_Code_File,   // output file
+                              PIC18F_FULL_IS &Instruction_Set,              // Pic instruction set
+                              uint32_t &File_Position_Counter,              // current file position
+                              bool &borrowed_byte_from_next_line);          // whether nextLine was used
 
 /*
-  line is valid if it has any relevant ascii characters present
+  line is valid if it contains a known command
  */
-bool check_assembly_file_line_is_valid(std::string line,Converted_Assembly_Code &Machine_Code_File,PIC18F_FULL_IS &Instruction_Set,uint32_t &File_Position_Counter);
+bool check_assembly_file_line_is_valid(std::string line,                            // current instruction
+                                       Converted_Assembly_Code &Machine_Code_File,  // output file
+                                       PIC18F_FULL_IS &Instruction_Set,             // Pic instruction set
+                                       uint32_t &File_Position_Counter);            // current file position
 
-void Convert_Databyte_into_hex_data(std::string line,std::string next_line,Converted_Assembly_Code &Machine_Code_File , uint32_t &File_Position_Counter,bool &borrowed_byte_from_next_line,PIC18F_FULL_IS &Instruction_Set);
+void Convert_Databyte_into_hex_data(std::string line,                               // current instruction
+                                    std::string next_line,                          // next instruction
+                                    Converted_Assembly_Code &Machine_Code_File ,    // outpout file
+                                    uint32_t &File_Position_Counter,                // address
+                                    bool &borrowed_byte_from_next_line,             // set true if next line is used
+                                    PIC18F_FULL_IS &Instruction_Set);               // pic instruction set
 
-void process_standard_line_from_binary(Converted_Assembly_Code &Machine_Code_File, uint32_t &File_Position_Counter, std::string line);
+void process_standard_line_from_binary(Converted_Assembly_Code &Machine_Code_File,
+                                       uint32_t &File_Position_Counter,
+                                       std::string line);
 
 /*
     store user defined bytes
  */
-void find_define_byte_tags(Converted_Assembly_Code &Machine_Code_File,std::string line, const uint32_t File_Position_Counter,PIC18F_FULL_IS &Instruction_Set,uint8_t address_offset);
+void find_define_byte_tags(Converted_Assembly_Code &Machine_Code_File,              // output file
+                           std::string line,                                        // current instruction
+                           const uint32_t File_Position_Counter,                    // current address
+                           PIC18F_FULL_IS &Instruction_Set,                         // pic instruction set
+                           uint8_t address_offset);
 
 
 
-bool check_file_fits_memory(Converted_Assembly_Code &Machine_Code_File,PIC18F_FULL_IS &Instruction_Set)
-{
-    uint32_t max_size = 0;
 
-    for(auto address : Machine_Code_File.Address)
-    {
-        uint32_t total_size= strtol(address.c_str(),NULL,16) & 0xffff;
-        if((total_size > max_size)&&(strstr(address.c_str(),"NOP")==NULL))
-        {
-            max_size = total_size;
-        }
-
-    }
-    max_size+=2;    //max size points to start of instruction address, we need it to point to end of the isntruction
-    
-    printf("The program uses 0x%.4X of 0x%.4X Bytes of Memory\nThere are %d bytes (%d Instructions) remaining\n",max_size,Instruction_Set.FLASH_size ,Instruction_Set.FLASH_size -max_size+1,(signed)(Instruction_Set.FLASH_size -max_size+1)/2);
-    //each line uses 2 bytes of memory
-    if(max_size > Instruction_Set.FLASH_size + 2)
-    {
-   //     return false;
-    }
-    return true;
-}
 /*
     make sure that the comment marker is not part of a string
  
@@ -103,7 +102,7 @@ bool checkIfCommentCharacterIsPartOfAStringOrChar(std::string line_from_file, si
     return thisIsAString;
 }
 // for skipping in line comments
-std::string skip_inline_comments(std::string line_from_file,std::ifstream &input_file,char seperating_character, const char *CommentCharacter)
+void skip_inline_comments(std::string &line_from_file,std::ifstream &input_file)
 {
 
     // search for the next valid line
@@ -123,9 +122,10 @@ std::string skip_inline_comments(std::string line_from_file,std::ifstream &input
             do
             {
                 entireEntryHasBeenRead = true;
-                if(!getline(input_file, temp,seperating_character))
+                if(!getline(input_file, temp,'\n'))
                 {
-                    return "END OF FILE";
+                    line_from_file = "END OF FILE";
+                    return ;
                 }
                 
                 /*
@@ -195,16 +195,15 @@ std::string skip_inline_comments(std::string line_from_file,std::ifstream &input
                 }
             }
     }
-    return line_from_file;
+    return ;
 }
 
 bool check_assembly_file_line_is_valid(std::string line,Converted_Assembly_Code &Machine_Code_File,PIC18F_FULL_IS &Instruction_Set,uint32_t &File_Position_Counter)
 {
+    
     for(uint32_t it = 0; it<Instruction_Set.PIC18F_MNEMONICS.size(); it++)
     {
-        if((strstr(line.c_str(),Instruction_Set.PIC18F_MNEMONICS[it].c_str()))
-           || (strstr(line.c_str(), "ORG"))      //Memory origin
-           || (strstr(line.c_str(),"UNKNOWN")))  //unknown command
+        if(strstr(line.c_str(),Instruction_Set.PIC18F_MNEMONICS[it].c_str()))
         {
             process_standard_line_from_binary(Machine_Code_File, File_Position_Counter, line);
             return true;
@@ -350,7 +349,7 @@ void Convert_Databyte_into_hex_data(std::string line,std::string next_line,Conve
         free(data_bytes);
     }
 }
-void process_binary_file_line(std::string &line,std::string &next_line,Converted_Assembly_Code &Machine_Code_File,PIC18F_FULL_IS &Instruction_Set, uint32_t &File_Position_Counter, bool &borrowed_byte_from_next_line,std::ifstream &input_file)
+void process_binary_file_line(std::string &line,std::string &next_line,Converted_Assembly_Code &Machine_Code_File,PIC18F_FULL_IS &Instruction_Set, uint32_t &File_Position_Counter, bool &borrowed_byte_from_next_line)
 {
     /*
             Directives
@@ -383,6 +382,10 @@ void process_binary_file_line(std::string &line,std::string &next_line,Converted
     {
         process_standard_line_from_binary( Machine_Code_File,  File_Position_Counter, line);
     }
+    else if((strstr(line.c_str(), "ORG")) || (strstr(line.c_str(),"UNKNOWN")))  //unknown command
+    {
+        process_standard_line_from_binary(Machine_Code_File, File_Position_Counter, line);
+    }
     
     //check for macro invocation
     else if(checkForMacro(line,File_Position_Counter) == true)
@@ -404,6 +407,8 @@ void process_binary_file_line(std::string &line,std::string &next_line,Converted
     }
 
 }
+
+
 Converted_Assembly_Code Copy_Over_Binary_File(const char *inputfiledir,PIC18F_FULL_IS &Instruction_Set)
 {
     
@@ -429,14 +434,12 @@ Converted_Assembly_Code Copy_Over_Binary_File(const char *inputfiledir,PIC18F_FU
                                                 //if the strings are odd (including null) then we can borrow the first byte of the next line if it is also a "db"
     bool borrowed_byte_from_next_line = false;  //this is because we normally use two bytes per instruction. but a db may be an odd number
     
-    char seperating_character = '\n';
-    
     uint32_t File_Position_Counter = 0 ;        // keep track of which line we're on
 
     
     while(1)
     {
-        next_line = skip_inline_comments(next_line,input_file,seperating_character, ";");
+        skip_inline_comments(next_line,input_file);
         
         if(next_line == "END OF FILE")
         {
@@ -444,15 +447,71 @@ Converted_Assembly_Code Copy_Over_Binary_File(const char *inputfiledir,PIC18F_FU
         }
         if(line!="FIRST ITERATION")
         {
-            process_binary_file_line(line, next_line,Machine_Code_File, Instruction_Set, File_Position_Counter, borrowed_byte_from_next_line,input_file);
+            process_binary_file_line(line, next_line,Machine_Code_File, Instruction_Set, File_Position_Counter, borrowed_byte_from_next_line);
         }
         line = next_line;
     }
     next_line=";";
-    process_binary_file_line(line,next_line,Machine_Code_File, Instruction_Set, File_Position_Counter, borrowed_byte_from_next_line,input_file);
+    process_binary_file_line(line,next_line,Machine_Code_File, Instruction_Set, File_Position_Counter, borrowed_byte_from_next_line);
     
     free(new_file);
     input_file.close();
 
     return Machine_Code_File;
+}
+
+
+bool check_file_fits_memory(Converted_Assembly_Code &Machine_Code_File,PIC18F_FULL_IS &Instruction_Set)
+{
+    uint32_t max_size = 0;
+
+    for(auto address : Machine_Code_File.Address)
+    {
+        uint32_t total_size= strtol(address.c_str(),NULL,16) & 0xffff;
+        if((total_size > max_size)&&(strstr(address.c_str(),"NOP")==NULL))
+        {
+            max_size = total_size;
+        }
+
+    }
+    max_size+=2;    //max size points to start of instruction address, we need it to point to end of the isntruction
+    
+    printf("The program uses 0x%.4X of 0x%.4X Bytes of Memory\nThere are %d bytes (%d Instructions) remaining\n",max_size,Instruction_Set.FLASH_size ,Instruction_Set.FLASH_size -max_size+1,(signed)(Instruction_Set.FLASH_size -max_size+1)/2);
+    //each line uses 2 bytes of memory
+    if(max_size > Instruction_Set.FLASH_size + 2)
+    {
+   //     return false;
+    }
+    return true;
+}
+
+
+bool checkValidityOfFile(Converted_Assembly_Code AssemblyCode,const char *inputfiledir,PIC18F_FULL_IS &Instruction_Set)
+{
+    
+    if(AssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM.size() == 0)
+    {
+        std::cout << "Error: File Not Found: " << inputfiledir << "\n";
+        return false;
+    }
+    if(!check_file_fits_memory(AssemblyCode,Instruction_Set))
+    {
+        std::cout << "ERROR - NOT ENOUGH FLASH MEMORY" << std::endl;
+        return false;
+    }
+    return true;
+}
+void cleanupPreviousWork()
+{
+    clearIncludedFileDirectories();
+    clearEQU();
+}
+void appendIncludedFiles(Converted_Assembly_Code &AssemblyCode,PIC18F_FULL_IS &Instruction_Set)
+{
+    std::vector<include_directory_t> includedFiles = checkForIncludedFiles();
+    
+    for(auto it: includedFiles)
+    {
+        AssemblyCode.append(Copy_Over_Binary_File(it.name.c_str(),Instruction_Set));
+    }
 }

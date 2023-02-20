@@ -54,5 +54,16 @@ public:
 // compare the used memory to the installed amount
 bool check_file_fits_memory(Converted_Assembly_Code &Machine_Code_File,PIC18F_FULL_IS &Instruction_Set);
 
+// add #included files to main .asm
+void appendIncludedFiles(Converted_Assembly_Code &AssemblyCode,PIC18F_FULL_IS &Instruction_Set);
+
+// remove any data left over from previous assembling events
+void cleanupPreviousWork();
+
+// make sure the read-in file is usable
+bool checkValidityOfFile(Converted_Assembly_Code AssemblyCode,const char *inputfiledir,PIC18F_FULL_IS &Instruction_Set);
+
+// copy 'inputfiledir' into memory
+// remove comments and do some preprocessing of macros and directives
 Converted_Assembly_Code Copy_Over_Binary_File(const char *inputfiledir,PIC18F_FULL_IS &Instruction_Set);
 #endif /* AssemblerFilePreprocessing_hpp */

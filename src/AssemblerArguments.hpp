@@ -42,8 +42,8 @@ uint8_t find_a_value_for_assembly(const char *Assembly_Instruction,PIC18F_FULL_I
 // n is used in branching instructions
 uint32_t check_n_for_assembly(int32_t f, uint32_t program_counter);
 uint8_t find_LFSR_f_value(const char *Assembly_Instruction);
-uint16_t check_if_FSR_or_RAW_REG(const char *REGISTER,PIC18F_FULL_IS & Instruction_Set);
-uint32_t convert_FSR_for_assembler(const char *SFR_REG,PIC18F_FULL_IS & Instruction_Set, uint32_t offset);
+uint16_t check_if_SFR_or_RAW_REG(const char *REGISTER,PIC18F_FULL_IS & Instruction_Set);
+uint32_t convert_SFR_for_assembler(const char *SFR_REG,PIC18F_FULL_IS & Instruction_Set, uint32_t offset);
 
 //where number system has the format "0x" / "0d" / "0b"
 //                                    "h'"   "d'"  "b'"
