@@ -59,11 +59,17 @@ A header will appear above each function indicating which registers are used
 <img width="662" alt="Screenshot 2023-02-19 at 3 46 25 pm" src="https://user-images.githubusercontent.com/113757511/219922831-21560187-541d-490b-bd91-839b98c90f44.png">
 
 
+If General Purpose registers are used, then these will also be indicated under the tag "RAM"
+
+<img width="676" alt="Screenshot 2023-02-26 at 8 24 38 pm" src="https://user-images.githubusercontent.com/113757511/221402551-368f14ac-96ba-4850-a5b5-dc34235d2dfe.png">
+
 #### Highlight the value's being read by TBLRD instructions
 
 <img width="548" alt="Screenshot 2023-02-11 at 12 36 26 pm" src="https://user-images.githubusercontent.com/113757511/218231794-0c27df40-8520-432c-ae71-efbcd1feea40.png">
 
 You can see that these nonsense commands are actually ascii data '3.' 
+
+Currently this only works if the TBLRPTR is loaded with literals
 
 ### Assembler
 The Assembler can successfully re-assemble the disassembled hex file. It can also process brand new .asm files, but is not yet fully comptaible with MPLAB's assembler. 
