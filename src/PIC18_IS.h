@@ -38,7 +38,24 @@ class PIC18F_IS{
 
 public:
 
-
+    enum PIC_COMMANDS{
+        ADDWF = 0,ADDWFC,   ANDWF,    CLRF,     COMF,
+        CPFSEQ,   CPFSGT,   CPFSLT,   DECF,     DECFSZ,
+        DCFSNZ,   INCF,     INCFSZ,   INFSNZ,   IORWF,
+        MOVF,     MOVFF,    MOVWF,    MULWF,    NEGF,
+        RLCF,     RLNCF,    RRCF,     RRNCF,    SETF, //5
+        SUBFWB,   SWAPF,    TSTFSZ,   XORWF,    BCF,
+        BSF,      BTFSC,    BTFSS,    BTG,      BC,
+        BN,       BNC,      BNN,      BNOV,     BNZ,
+        BOV,      BRA,      BZ,       CALL,     CLRWDT,
+        DAW,      GOTO,     NOP,      NOP2,     POP,        //10
+        PUSH,     RCALL,    RESET,    RETFIE,   RETLW,
+        RETURN,   SLEEP,    ADDLW,    ANDLW,    IORLW,
+        LFSR,     MOVLB,    MOVLW,    MULLW,
+        SUBLW,    XORLW,    TBLRD,    TBLRD_P,  TBLRD_M,  //14
+        P_TBLRD,  TBLWT_S,  TBLWT_P,  TBLWT_M,  P_TBLWT,
+        SUBWF,    SUBWFB
+    };
     const std::vector<std::string> PIC18F_MNEMONICS ={
         "ADDWF",    "ADDWFC",   "ANDWF",    "CLRF",     "COMF",                 ///1
         "CPFSEQ",   "CPFSGT",   "CPFSLT",   "DECF",     "DECFSZ",
@@ -52,7 +69,7 @@ public:
         "DAW",      "GOTO",     "NOP",      "NOP",      "POP",        //10
         "PUSH",     "RCALL",    "RESET",    "RETFIE",   "RETLW",
         "RETURN",   "SLEEP",    "ADDLW",    "ANDLW",    "IORLW",
-        "LFSR",     "MOVLB",    "MOVLW",    "MULLW",    "RETLW",
+        "LFSR",     "MOVLB",    "MOVLW",    "MULLW",
         "SUBLW",    "XORLW",    "TBLRD*",   "TBLRD*+",  "TBLRD*-",  //14
         "TBLRD+*",  "TBLWT*",   "TBLWT*+",  "TBLWT*-",  "TBLWT+*",
         "SUBWF",    "SUBWFB"
@@ -73,7 +90,7 @@ public:
         0b0000000000000111,0b1110111100000000,0b0000000000000000,0b1111000000000000,0b0000000000000110,    //10
         0b0000000000000101,0b1101100000000000,0b0000000011111111,0b0000000000010000,0b0000110000000000,
         0b0000000000010010,0b0000000000000011,0b0000111100000000,0b0000101100000000,0b0000100100000000,
-        0b1110111000000000,0b0000000100000000,0b0000111000000000,0b0000110100000000,0b0000110000000000,
+        0b1110111000000000,0b0000000100000000,0b0000111000000000,0b0000110100000000,
         0b0000100000000000,0b0000101000000000,0b0000000000001000,0b0000000000001001,0b0000000000001010,
         0b0000000000001011,0b0000000000001100,0b0000000000001101,0b0000000000001110,0b0000000000001111,
         0b0101110000000000,0b0101100000000000
@@ -92,7 +109,7 @@ public:
         0b0000000000000111,0b1110111111111111,0b0000000000000000,0b1111111111111111,0b0000000000000110,    //10
         0b0000000000000101,0b1101111111111111,0b0000000011111111,0b0000000000010001,0b0000110011111111,
         0b0000000000010011,0b0000000000000011,0b0000111111111111,0b0000101111111111,0b0000100111111111,
-        0b1110111011111111,0b0000000100001111,0b0000111011111111,0b0000110111111111,0b0000110011111111,
+        0b1110111011111111,0b0000000100001111,0b0000111011111111,0b0000110111111111,
         0b0000100011111111,0b0000101011111111,0b0000000000001000,0b0000000000001001,0b0000000000001010,
         0b0000000000001011,0b0000000000001100,0b0000000000001101,0b0000000000001110,0b0000000000001111,
         0b0101111111111111,0b0101101111111111
@@ -111,7 +128,7 @@ public:
         PIC18F_NO_ARGS,    PIC18F_DW_CASE2,   PIC18F_NOP_CASE,   PIC18F_NOP_CASE,   PIC18F_NO_ARGS,    //10
         PIC18F_NO_ARGS,    PIC18F_CTRL_CASE2, PIC18F_NO_ARGS,    PIC18F_RET_CASE,   PIC18F_LIT_CASE,
         PIC18F_RET_CASE,   PIC18F_NO_ARGS,    PIC18F_LIT_CASE,   PIC18F_LIT_CASE,   PIC18F_LIT_CASE,
-        PIC18F_LIT_CASE2,  PIC18F_LIT_CASE,   PIC18F_LIT_CASE,   PIC18F_LIT_CASE,   PIC18F_LIT_CASE,
+        PIC18F_LIT_CASE2,  PIC18F_LIT_CASE,   PIC18F_LIT_CASE,   PIC18F_LIT_CASE,
         PIC18F_LIT_CASE,   PIC18F_LIT_CASE,   PIC18F_NO_ARGS,    PIC18F_NO_ARGS,    PIC18F_NO_ARGS,
         PIC18F_NO_ARGS,    PIC18F_NO_ARGS,    PIC18F_NO_ARGS,    PIC18F_NO_ARGS,    PIC18F_NO_ARGS, //15
         PIC18F_FDA_CASE,   PIC18F_FDA_CASE
@@ -129,7 +146,7 @@ public:
         "DAW; Decimal Adjust WREG",                         "GOTO n; Go to Address",                        "NOP; No Operation",                        "NOP; No Operation",                        "POP; Pop top of return Stack",        //10
         "PUSH; Push off return Stack",                      "RCALL n; Relative Call",                       "RESET; MCU software reset",                "RETFIE s; Return from Interrupt Enable",   "RETLW k; Return with literal in WREG",
         "RETURN s; Return from Subroutine",                 "SLEEP; Go to Standby Mode",                    "ADDLW k; add literal and WREG",            "ANDLW k; AND literal with WREG",           "IORLW k; Inclusive OR with WREG",
-        "LFSR f,k; Move Literal (12-bit) to FSR(f)",        "MOVLB k; Move literal to BSR<3:0>",            "MOVLW k; Move literal to WREG",            "MULLW k; Multiply literal with WREG",      "RETLW k; Return with literal in WREG",
+        "LFSR f,k; Move Literal (12-bit) to FSR(f)",        "MOVLB k; Move literal to BSR<3:0>",            "MOVLW k; Move literal to WREG",            "MULLW k; Multiply literal with WREG",
         "SUBLW k; Subtract WREG from literal",              "XORLW; Exclusive OR literal with WREG",        "TBLRD*; Table Read",                       "TBLRD*+; Table Read with post-increment",  "TBLRD*-; Table Read with post-decrement",
         "TBLRD+*; Table Read with pre-increment",           "TBLWT*; Table Write",                          "TBLWT*+; Table Write with post-increment", "TBLWT*-; Table Write with post-decrement", "TBLWT+*; Table Write with pre-increment",
         "SUBWF f,d,a; Subtract WREG from f",                "SUBWFB f,d,a; Subtract WREG from f with borrow"
@@ -140,6 +157,23 @@ public:
 class PIC18F_FULL_IS: public PIC18F_IS
 {
 public:
+    enum destinationBits{
+        FILE = 1,
+        WREG = 0
+    };
+    
+    uint32_t currentCommand;
+    uint8_t destinationBit;     // for F,d,a commands; records current value of 'd'
+    uint8_t currentBank;        // for any command using 'a' parameter, keep track of wheterh command use access or GPR banks
+    uint8_t currentBSR;         // current value of bank select register
+    uint8_t currentFile;        // current command file
+    uint8_t currentBit;         // current bits used in a bit-based command
+    
+    // for movff only
+    uint16_t MOVFFs;            // most recent MOVFF source
+    uint16_t MOVFFd;            // most recent MOVFF destination
+    
+    
     uint32_t Config_Address = 0x30;
     uint32_t Device_ID_Address = 0x20;
     uint32_t FLASH_size = 0xFFFF;

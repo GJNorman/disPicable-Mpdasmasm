@@ -10,6 +10,7 @@
 // holds all of the EQU variables defined by the user files
 static std::vector<EQU_list_t> EQU_List;
 std::string MostRecentEQU;                  // the last EQU found in the list from either the disassembler or assembler
+std::string secondMostRecentEQU;            // we need this because of MOVFF instructions, otherwise we will only record the second file
 
 static size_t LastAccessEquOffset = 0;      // records vector position of MostRecentEQU
 
@@ -18,9 +19,14 @@ std::string getMostRecentEQU()
 {
     return MostRecentEQU;
 }
+std::string getSecondMostRecentEQU()
+{
+    return secondMostRecentEQU;
+}
 void clearMostRecentEQU()
 {
     MostRecentEQU.clear();
+    secondMostRecentEQU.clear();
 }
 void clearEQU()
 {
@@ -113,13 +119,21 @@ void addNewEQU(std::string Assembly_Instruction)
         }
     }
 }
+void setEQU(uint32_t regAddress)
+{
+    char temp[10];
+    
+    snprintf(temp,sizeof(temp),"0x%x",regAddress);
+    
+    MostRecentEQU = temp;
+}
 // take a register address from a "FILE" command and return the associated "EQU"
 std::string processEQUforDisassembler(uint32_t regAddress, uint32_t mask)
 {
     char temp[10];
     
     snprintf(temp,sizeof(temp),"0x%x",regAddress&mask);
-    
+    secondMostRecentEQU = MostRecentEQU;
     MostRecentEQU = temp;
     LastAccessEquOffset = 0;
     for(auto Equis: EQU_List)
@@ -139,6 +153,7 @@ std::string processEQUforDisassembler(uint32_t regAddress, uint32_t mask)
     }
     return MostRecentEQU;
 }
+
 std::string findEQUBitForDisassembler(int bitNum)
 {
     std::string returnValue;
@@ -160,6 +175,7 @@ std::string findEQUBitForDisassembler(int bitNum)
 
     return returnValue;
 }
+
 // take a variable name and return the address
 uint32_t processEQUforAssembler(std::string RegisterName)
 {
@@ -170,6 +186,7 @@ uint32_t processEQUforAssembler(std::string RegisterName)
         {
             if(strncasecmp(Equis.Tag.c_str(),RegisterName.c_str(),Equis.Tag.size())==0)
             {
+                secondMostRecentEQU = MostRecentEQU;
                 MostRecentEQU = Equis.Tag;
                 //replace with the register ID
                 uint32_t address = strtol(Equis.Address.c_str(),NULL,16) &0xffffff;
@@ -188,13 +205,10 @@ uint32_t processEQUBitForAssembler(std::string BitName)
 
     for(size_t index=0; index<EQU_List[LastAccessEquOffset].bitfields.size(); index++)
     {
-        
         if(EQU_List[LastAccessEquOffset].bitfields[index].size() == BitName.size())
         {
-            
             if(strncmp(EQU_List[LastAccessEquOffset].bitfields[index].c_str(),BitName.c_str(),EQU_List[LastAccessEquOffset].bitfields[index].size())==0)
             {
-                
                 bitNum =  strtol(EQU_List[LastAccessEquOffset].bitfieldAddresses[index].c_str(), NULL,16) &0xffffff;
                 
                 break;

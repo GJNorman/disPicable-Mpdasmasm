@@ -48,7 +48,7 @@ void Disassemble(const char *hexFile,                   // input .hex file
     Copy_FIRMWARE_FILE_to_Buffer(hexFile,hexFileContents);
     
     Converted_Assembly_Code OutputAssemblyCode;                 // holds contents of output file (".asm")
-        
+    
     clearEQU();
     
     ReadMCUHeader(HeaderFile,Instruction_Set);
@@ -56,7 +56,7 @@ void Disassemble(const char *hexFile,                   // input .hex file
     // read through hex file, convert opcodes to assembly
     parseHexFile(hexFileContents,OutputAssemblyCode,Instruction_Set,bDisplayAssembly, bDisplayBinContents);
     
-    HighlightFSRs(OutputAssemblyCode);
+    HighlightSFRs(OutputAssemblyCode);
     
     markTableReads(OutputAssemblyCode,Instruction_Set);
 

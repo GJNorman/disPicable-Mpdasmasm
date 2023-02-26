@@ -29,10 +29,16 @@ enum EQU_Types{
 // grab the previously found equ
 std::string getMostRecentEQU();
 
+// grab the second most recently found EQU, needed for MOVFF instructions
+std::string getSecondMostRecentEQU();
+
 void clearMostRecentEQU();
 
 // reset vector
 void clearEQU();
+
+// mamual set the most recent EQU -> used for setting to a literal address
+void setEQU(uint32_t regAddress);
 
 // copy equ statement into EQU_list_t vector
 void addNewEQU(std::string Assembly_Instruction);

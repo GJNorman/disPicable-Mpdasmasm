@@ -7,6 +7,8 @@
 
 #include "AssemblerInstructionProcessor.hpp"
 
+// the header contains information on the kind, position and amount of data
+// for each line of the hex file
 void outputHeader(Address_And_Checksum_t &Address,
                   PIC18F_FULL_IS &Instruction_Set,
                   char *&ReturnWord)
@@ -47,11 +49,9 @@ bool processInstruction(std::string &Assembly_Instruction,      // current line 
     static char *ReturnWord=NULL;                  // when the first byte of data comes from the previous line
 
     bool instruction_found = false;
-    // isolate the instruction from any attached parameters
-    size_t point1 = 0;
-    size_t point2 = FindNextSpaceCharacter(Assembly_Instruction,point1);
     
-    std::string command = Assembly_Instruction.substr(point1,point2-point1);
+    // isolate the instruction from any attached parameters
+    std::string command = Assembly_Instruction.substr(0,FindNextSpaceCharacter(Assembly_Instruction,0));
     
     for(size_t pos = 0; pos<Instruction_Set.PIC18F_MNEMONICS.size(); pos++)
     {

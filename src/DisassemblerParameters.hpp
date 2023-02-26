@@ -10,16 +10,16 @@
 
 #include <iostream>
 #include <stdint.h>
-void find_opcode_parameters(uint16_t MachineCode_byte,
-                            uint8_t &prm1,
-                            uint8_t &prm2,
-                            uint16_t &prm3,
-                            uint8_t prm1_operand,
-                            uint8_t prm2_operand,
-                            uint8_t prm3_operand,
-                            uint8_t prm_bitshift,
-                            char &Access_or_bank_RAM);
 
+void find_opcode_parameters(uint16_t MachineCode_byte,
+                            uint8_t &b_or_d,
+                            uint8_t &Access,
+                            uint16_t &file,
+                            uint8_t b_or_d_mask,
+                            uint8_t access_mask,
+                            uint8_t file_mask,
+                            uint8_t b_or_d_bitshift,
+                            char &Access_or_bank_RAM);           // outputs as either 'A' or 'B'
 
 uint16_t check_n(int16_t n,
                  uint16_t bitmask,

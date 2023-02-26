@@ -14,18 +14,28 @@ constexpr int commentSpacing = 52;
 // for formatting data as comments
 static void addData(char *&command_for_prompt, const char Assembly_Comment_Marker,const char *Description, int max_len)
 {
+    char *reference_point = command_for_prompt;
+   
+    // in case there are multyiple lines - well move straigh to the final one
+    while(strstr(reference_point,"\n"))
+    {
+        reference_point = strstr(reference_point,"\n") + strlen("\n");
+    }
+    
     // if the line already has another comment, we will create a newline
-    if(strstr(command_for_prompt,";"))
+    if(strstr(reference_point,";"))
     {
-        snprintf(command_for_prompt, max_len, "%s\n%*c",command_for_prompt,commentSpacing, Assembly_Comment_Marker);
+        snprintf(&reference_point[strlen(reference_point)], max_len-strlen(command_for_prompt), "\n");
+        
+        reference_point += strlen(reference_point); // move to end
     }
-    else
-    {
-        int command_width = commentSpacing - (int)strlen(command_for_prompt);
-        snprintf(command_for_prompt, max_len, "%s%*c",command_for_prompt,command_width, Assembly_Comment_Marker);
-    }
-
-    strcat(command_for_prompt,Description);
+    
+    // we now add the comment
+    int command_width = commentSpacing - (int)(strlen(reference_point));
+    
+    snprintf(&reference_point[strlen(reference_point)],
+             max_len-strlen(command_for_prompt),
+             "%*c%s",command_width, Assembly_Comment_Marker,Description);
 }
 
 // adds an explanantion of what each command does

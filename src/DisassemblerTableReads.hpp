@@ -20,7 +20,7 @@ void markAllAsciiData(Converted_Assembly_Code &OutputAssemblyCode);
 void markTableReads(Converted_Assembly_Code &OutputAssemblyCode,PIC18F_FULL_IS &Instruction_Set);
 
 // keep track of the data laoded into the various table pointer registers
-void trackTableReads(char *&command_for_prompt, Converted_Assembly_Code &OutputAssemblyCode,uint16_t n );
+void trackTableReads(char *command_for_prompt, Converted_Assembly_Code &OutputAssemblyCode,uint16_t n ,PIC18F_FULL_IS &Instruction_Set);
 
 // save the values loaded into table pointer registers
 void setTablePointerValue(uint8_t &value, uint16_t &valueToSet, std::string &Assembly_Instruction);

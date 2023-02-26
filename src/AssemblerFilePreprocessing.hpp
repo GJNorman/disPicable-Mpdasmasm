@@ -17,6 +17,7 @@
 #include "MacroEngine.hpp"
 #include "AssembleDirectives.hpp"
 #include "EQUs.hpp"
+#include "DisassemblerRamTracker.hpp"
 class Converted_Assembly_Code{
 public:
     // data for label
@@ -49,10 +50,6 @@ public:
             this->ASSEMBLY_CODE_FULL_PROGRAM.push_back(it);
     }
 };
-
-
-// compare the used memory to the installed amount
-bool check_file_fits_memory(Converted_Assembly_Code &Machine_Code_File,PIC18F_FULL_IS &Instruction_Set);
 
 // add #included files to main .asm
 void appendIncludedFiles(Converted_Assembly_Code &AssemblyCode,PIC18F_FULL_IS &Instruction_Set);

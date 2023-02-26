@@ -16,6 +16,5 @@
 
 void processDirective(std::string Assembly_Instruction,
                       Address_And_Checksum_t &Address,
-                      PIC18F_FULL_IS &Instruction_Set
-                      );
+                      PIC18F_FULL_IS &Instruction_Set);
 #endif /* AssembleDirectives_hpp */

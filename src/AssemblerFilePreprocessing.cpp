@@ -8,25 +8,44 @@
 #include "AssemblerFilePreprocessing.hpp"
 
 const char *DefineByteDirective = "DB ";
-void skip_inline_comments(std::string &line_from_file,                      // this will return the next non-commented out line
-                          std::ifstream &input_file                         // asm file contents
+
+// find the next line that is not completely commented out
+// remove any inline comment if present
+void skip_inline_comments(            std::string &line_from_file,                  // this will return the next non-commented out line
+                                      std::ifstream &input_file                     // asm file contents
                           );
 
-void process_binary_file_line(std::string &line,                            // current instruction
-                              std::string &next_line,                       // next instruction - only used for 'DB'
-                              Converted_Assembly_Code &Machine_Code_File,   // output file
-                              PIC18F_FULL_IS &Instruction_Set,              // Pic instruction set
-                              uint32_t &File_Position_Counter,              // current file position
-                              bool &borrowed_byte_from_next_line);          // whether nextLine was used
+// read a line, standardise format, remove comments, pass on for futher processing if relevant
+void process_binary_file_line(        std::string &line,                            // current instruction
+                                      std::string &next_line,                       // next instruction - only used for 'DB'
+                                      Converted_Assembly_Code &Machine_Code_File,   // output file
+                                      PIC18F_FULL_IS &Instruction_Set,              // Pic instruction set
+                                      uint32_t &File_Position_Counter,              // current file position
+                                      bool &borrowed_byte_from_next_line            // whether nextLine was used
+                            );
 
-/*
-  line is valid if it contains a known command
- */
+// standard line is one that is not a comment
+// processing involves copying to Machine_Code_File as a command and an address
+void process_standard_line_from_binary(Converted_Assembly_Code &Machine_Code_File,
+                                       uint32_t &File_Position_Counter,
+                                       std::string line);
+
+
+//  line is valid if it contains a known command
 bool check_assembly_file_line_is_valid(std::string line,                            // current instruction
                                        Converted_Assembly_Code &Machine_Code_File,  // output file
                                        PIC18F_FULL_IS &Instruction_Set,             // Pic instruction set
                                        uint32_t &File_Position_Counter);            // current file position
 
+
+// store user defined bytes
+void find_define_byte_tags(Converted_Assembly_Code &Machine_Code_File,              // output file
+                           std::string line,                                        // current instruction
+                           const uint32_t File_Position_Counter,                    // current address
+                           PIC18F_FULL_IS &Instruction_Set,                         // pic instruction set
+                           uint8_t address_offset);
+
+//  take a user DB and convert from ascii to hex
 void Convert_Databyte_into_hex_data(std::string line,                               // current instruction
                                     std::string next_line,                          // next instruction
                                     Converted_Assembly_Code &Machine_Code_File ,    // outpout file
@@ -34,30 +53,21 @@ void Convert_Databyte_into_hex_data(std::string line,                           
                                     bool &borrowed_byte_from_next_line,             // set true if next line is used
                                     PIC18F_FULL_IS &Instruction_Set);               // pic instruction set
 
-void process_standard_line_from_binary(Converted_Assembly_Code &Machine_Code_File,
-                                       uint32_t &File_Position_Counter,
-                                       std::string line);
-
-/*
-    store user defined bytes
- */
-void find_define_byte_tags(Converted_Assembly_Code &Machine_Code_File,              // output file
-                           std::string line,                                        // current instruction
-                           const uint32_t File_Position_Counter,                    // current address
-                           PIC18F_FULL_IS &Instruction_Set,                         // pic instruction set
-                           uint8_t address_offset);
-
 
 
 
 /*
     make sure that the comment marker is not part of a string
  
-    " Hello World; "                | This is allowed
+    CASE1    " Hello World; "                       | This is allowed
+     
+    CASE2    " Hello World"  ; some comment         | only the comment will be removed
+     
+    CASE3    " Hello World;" ; some comment         | only comment should be removed
+     
+    CASE4    ';'                                    | This is allowed
  
-    " Hello World"  ; some comment  | only the comment will be removed
- 
-    " Hello World;" ; some comment  | only comment should be removed
+    CASE5    MOVLW  temp     ; move "temp" to WREG  | comment will be removed
  */
 bool checkIfCommentCharacterIsPartOfAStringOrChar(std::string line_from_file, size_t &comment_Position, const char *commentMarker)
 {
@@ -65,28 +75,41 @@ bool checkIfCommentCharacterIsPartOfAStringOrChar(std::string line_from_file, si
     bool thisIsAString = false;
     
     char searchChar[2] = "\'";
-    size_t MakeSureThisIsntPartOfAStringOrChar = line_from_file.find("'");  // character definition ' '
+    
+    /*
+     Check if there are any character or string quotes on the line that has a comment
+     
+     meaning  '  or  "
+     */
+    
+    size_t MakeSureThisIsntPartOfAStringOrChar = line_from_file.find("'");      // character definition ' '
     
     if(MakeSureThisIsntPartOfAStringOrChar == std::string::npos)
     {
-        searchChar[0] ='\"';
-        MakeSureThisIsntPartOfAStringOrChar = line_from_file.find("\""); // string definition " "
+        searchChar[0] ='\"';                                                    // paired character is not a string quote
+        MakeSureThisIsntPartOfAStringOrChar = line_from_file.find("\"");        // string definition " "
     }
+    
+    // if this passes then we have a char/string
     if(MakeSureThisIsntPartOfAStringOrChar != std::string::npos)
     {
+        // make sure the comment appears after the first " or ' character
+        // otherwise (CASE5), we can safely remove the comment
         if(MakeSureThisIsntPartOfAStringOrChar < comment_Position)
         {
             // make sure the comment isn't after the terminating character
-            
+            // find the terminating character, which is either '  or "
             MakeSureThisIsntPartOfAStringOrChar = line_from_file.find(searchChar,MakeSureThisIsntPartOfAStringOrChar+1);
             
             if(MakeSureThisIsntPartOfAStringOrChar!=std::string::npos)
             {
+                // if the terminating character is after the comment then the comment character is part of a string/char
+                // see CASE1, CASE2
                 if(MakeSureThisIsntPartOfAStringOrChar > comment_Position)
                 {
                     thisIsAString = true;
                     
-                    // in case there is a comment after a string containing a comment marker
+                    // in case there is a comment after a string containing a comment marker -> CASE3
                     comment_Position = MakeSureThisIsntPartOfAStringOrChar+1;
                     comment_Position = line_from_file.find(commentMarker,comment_Position);
                     
@@ -94,14 +117,18 @@ bool checkIfCommentCharacterIsPartOfAStringOrChar(std::string line_from_file, si
                     if(comment_Position != std::string::npos)
                     {
                         thisIsAString = checkIfCommentCharacterIsPartOfAStringOrChar(line_from_file.substr(comment_Position,line_from_file.size()),comment_Position,commentMarker);
+                        
+                        
                     }
                 }
             }
         }
     }
+    
     return thisIsAString;
 }
 // for skipping in line comments
+// ignores lines that are bound by multi-line comments
 void skip_inline_comments(std::string &line_from_file,std::ifstream &input_file)
 {
 
@@ -129,7 +156,6 @@ void skip_inline_comments(std::string &line_from_file,std::ifstream &input_file)
                 }
                 
                 /*
-                 
                     Disable reading in data if a multi line comment is detected
                  */
                     if(temp.find("/*")!=std::string::npos)
@@ -190,17 +216,15 @@ void skip_inline_comments(std::string &line_from_file,std::ifstream &input_file)
                             // check if the comment-cleaned line is empty
                             lineIsNotEmpty = check_if_line_is_empty(line_from_file);
                         }
-                        
                     }
                 }
             }
     }
     return ;
 }
-
+// valid if a command is present, the line will only reach this function if it already doesn't contain a directive or other relevant keyword
 bool check_assembly_file_line_is_valid(std::string line,Converted_Assembly_Code &Machine_Code_File,PIC18F_FULL_IS &Instruction_Set,uint32_t &File_Position_Counter)
 {
-    
     for(uint32_t it = 0; it<Instruction_Set.PIC18F_MNEMONICS.size(); it++)
     {
         if(strstr(line.c_str(),Instruction_Set.PIC18F_MNEMONICS[it].c_str()))
@@ -221,7 +245,8 @@ void process_standard_line_from_binary(Converted_Assembly_Code &Machine_Code_Fil
     //store the memory address
         char temp[10]="";
         snprintf(temp,sizeof(temp), "%.4X",File_Position_Counter);
-        Machine_Code_File.Address.push_back(temp);
+        
+    Machine_Code_File.Address.push_back(temp);
         File_Position_Counter+=2;
     
     
@@ -277,7 +302,12 @@ void find_define_byte_tags(Converted_Assembly_Code &Machine_Code_File,std::strin
 //  label           Directive       Value
 //  ScanPrompt:     DB              "\r\n LOGFILE SCAN:\0"
 //
-void Convert_Databyte_into_hex_data(std::string line,std::string next_line,Converted_Assembly_Code &Machine_Code_File , uint32_t &File_Position_Counter,bool &borrowed_byte_from_next_line,PIC18F_FULL_IS &Instruction_Set)
+void Convert_Databyte_into_hex_data(std::string line,
+                                    std::string next_line,
+                                    Converted_Assembly_Code &Machine_Code_File ,
+                                    uint32_t &File_Position_Counter,
+                                    bool &borrowed_byte_from_next_line,
+                                    PIC18F_FULL_IS &Instruction_Set)
 {
     char * data_bytes = return_substring(line.c_str(), "\"", "\"", 0, strlen("\""), 0);
     
@@ -340,9 +370,10 @@ void Convert_Databyte_into_hex_data(std::string line,std::string next_line,Conve
             counter++;
             
             Machine_Code_File.ASSEMBLY_CODE_FULL_PROGRAM.push_back(temp);
-            File_Position_Counter+=2;
+            
                 
             snprintf(temp,sizeof(temp), "%.4X",File_Position_Counter);
+            File_Position_Counter+=2;
             Machine_Code_File.Address.push_back(temp);
            
         }
@@ -378,10 +409,10 @@ void process_binary_file_line(std::string &line,std::string &next_line,Converted
     {
         addNewEQU(line);
     }
-    else if((line.find("DB ")!= std::string::npos)||(line.find("db ")!= std::string::npos))
+   /* else if((line.find("DB ")!= std::string::npos)||(line.find("db ")!= std::string::npos))
     {
         process_standard_line_from_binary( Machine_Code_File,  File_Position_Counter, line);
-    }
+    }*/
     else if((strstr(line.c_str(), "ORG")) || (strstr(line.c_str(),"UNKNOWN")))  //unknown command
     {
         process_standard_line_from_binary(Machine_Code_File, File_Position_Counter, line);
@@ -399,7 +430,13 @@ void process_binary_file_line(std::string &line,std::string &next_line,Converted
             
         }
     }
-
+    else if (line.find("psect")!=std::string::npos)
+    {
+        if(line.find("class=BANK")!=std::string::npos)
+        {
+            RAMTracker::incrementRamBanksTotal();
+        }
+    }
     //check that there is an instruction on the line
     else if(!check_assembly_file_line_is_valid(line,Machine_Code_File,Instruction_Set,File_Position_Counter))
     {
@@ -430,7 +467,7 @@ Converted_Assembly_Code Copy_Over_Binary_File(const char *inputfiledir,PIC18F_FU
     
     
     std::string line = "FIRST ITERATION";       //prevent processing on first operation
-    std::string next_line ="";                      //we need to use 2 lines for the "db" directives,
+    std::string next_line ="";                  //we need to use 2 lines for the "db" directives,
                                                 //if the strings are odd (including null) then we can borrow the first byte of the next line if it is also a "db"
     bool borrowed_byte_from_next_line = false;  //this is because we normally use two bytes per instruction. but a db may be an odd number
     
@@ -457,46 +494,18 @@ Converted_Assembly_Code Copy_Over_Binary_File(const char *inputfiledir,PIC18F_FU
     free(new_file);
     input_file.close();
 
+    // the header file will contain information on the amount of RAM installed
+    if(strstr(inputfiledir,".inc") != NULL)
+        RAMTracker::initRamTracker();
+    
     return Machine_Code_File;
 }
-
-
-bool check_file_fits_memory(Converted_Assembly_Code &Machine_Code_File,PIC18F_FULL_IS &Instruction_Set)
-{
-    uint32_t max_size = 0;
-
-    for(auto address : Machine_Code_File.Address)
-    {
-        uint32_t total_size= strtol(address.c_str(),NULL,16) & 0xffff;
-        if((total_size > max_size)&&(strstr(address.c_str(),"NOP")==NULL))
-        {
-            max_size = total_size;
-        }
-
-    }
-    max_size+=2;    //max size points to start of instruction address, we need it to point to end of the isntruction
-    
-    printf("The program uses 0x%.4X of 0x%.4X Bytes of Memory\nThere are %d bytes (%d Instructions) remaining\n",max_size,Instruction_Set.FLASH_size ,Instruction_Set.FLASH_size -max_size+1,(signed)(Instruction_Set.FLASH_size -max_size+1)/2);
-    //each line uses 2 bytes of memory
-    if(max_size > Instruction_Set.FLASH_size + 2)
-    {
-   //     return false;
-    }
-    return true;
-}
-
-
 bool checkValidityOfFile(Converted_Assembly_Code AssemblyCode,const char *inputfiledir,PIC18F_FULL_IS &Instruction_Set)
 {
     
     if(AssemblyCode.ASSEMBLY_CODE_FULL_PROGRAM.size() == 0)
     {
         std::cout << "Error: File Not Found: " << inputfiledir << "\n";
-        return false;
-    }
-    if(!check_file_fits_memory(AssemblyCode,Instruction_Set))
-    {
-        std::cout << "ERROR - NOT ENOUGH FLASH MEMORY" << std::endl;
         return false;
     }
     return true;

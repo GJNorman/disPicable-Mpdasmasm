@@ -31,10 +31,9 @@ void generate_asm(std::vector<uint8_t> &MachineCode,                // data from
                   bool bDisplayBinContents,                         // debugging - display opcode input
                   uint16_t Address_Upper_16_bits);                  // upper 16 bits of current address
 
-// add final formatting before pushing to output
 void finalise_command(char *&command_for_prompt,                    // buffer for current instruction
                       Converted_Assembly_Code &OutputAssemblyCode,  // holds entire output program
-                      const char *Description,                      // Comment that describes what the instruction does
+                      PIC18F_FULL_IS &Instruction_Set,              // Pic instruction set
                       uint16_t Address_Upper_16_bits,               // upper 16 bits of address
                       uint32_t device_mem_size,                     // total available flash memory
                       uint16_t n );                                 // opcode

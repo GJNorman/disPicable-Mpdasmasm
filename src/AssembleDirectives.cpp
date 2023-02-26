@@ -24,15 +24,20 @@ void assemble_EEPROM_data(uint16_t EEPROM_START_ADD_U16,
 void processORG(std::string Assembly_Instruction,
                 Address_And_Checksum_t &Address);
 
+// define byte
 void  assemble_DB(std::string Assembly_Instruction,
                   Address_And_Checksum_t &Address,
                   PIC18F_FULL_IS &Instruction_Set);
 
-void assemble_UnknownOrDB(uint16_t value,
-                          Address_And_Checksum_t &Address,
-                          PIC18F_FULL_IS &Instruction_Set );
+// unknown command
+void assemble_Unknown(uint16_t value,
+                      Address_And_Checksum_t &Address,
+                      PIC18F_FULL_IS &Instruction_Set );
 
-// for lines that include a ':' character, we read until
+// for lines that include a ':' character, we read everything after this character
+// EEPROM_DIRECTIVE:
+// CONFIG_BITS:
+// DEVICE_ID:
 static char *GrabLabelledData(const char* Assembly_Instruction)
 {
     size_t p1 =(strstr(Assembly_Instruction,":")-Assembly_Instruction)+1;
@@ -57,8 +62,7 @@ static char *GrabLabelledData(const char* Assembly_Instruction)
 }
 void processDirective(std::string Assembly_Instruction,
                       Address_And_Checksum_t &Address,
-                      PIC18F_FULL_IS &Instruction_Set
-                      )
+                      PIC18F_FULL_IS &Instruction_Set)
 {
     
     // usually due to ascii data, or maybe code to be trasnferred to some other kind of chip
@@ -68,7 +72,7 @@ void processDirective(std::string Assembly_Instruction,
 
         uint16_t value=strtol(unknown_command,NULL,16);
         
-        assemble_UnknownOrDB(value, Address,Instruction_Set );
+        assemble_Unknown(value, Address,Instruction_Set );
 
         free(unknown_command);
     }
@@ -84,16 +88,17 @@ void processDirective(std::string Assembly_Instruction,
     {
         assemble_non_program_data(Instruction_Set.Config_Address, Assembly_Instruction.c_str(),Address,false);
     }
-    else if((strstr(Assembly_Instruction.c_str(),"db"))||(strstr(Assembly_Instruction.c_str(),"DB")))
+   /* else if((strstr(Assembly_Instruction.c_str(),"db"))||(strstr(Assembly_Instruction.c_str(),"DB")))
     {
         assemble_DB(Assembly_Instruction,Address, Instruction_Set);
-    }
+    }*/
     else if(strstr(Assembly_Instruction.c_str(),"EEPROM_DIRECTIVE"))
     {
         assemble_EEPROM_data(Instruction_Set.EEPROM_START_ADDR, Assembly_Instruction.c_str(),Address);
     }
 }
 
+// non-program data is EEPROM, config bits, device ID etc.
 void assemble_non_program_data(uint16_t REG_VALUE,
                                const char *Assembly_Instruction,
                                Address_And_Checksum_t &Address,
@@ -115,6 +120,7 @@ void assemble_non_program_data(uint16_t REG_VALUE,
     else
         output_Machine_Code("\r\n:0200000400%.2X%.2X",REG_VALUE,(1+(~check_sum)) & 0xff);
 
+    
     char *temp = GrabLabelledData(Assembly_Instruction);
     
     check_sum=0;
@@ -210,9 +216,9 @@ void processORG(std::string Assembly_Instruction,
     }
 }
 
-void assemble_UnknownOrDB(uint16_t value,
-                          Address_And_Checksum_t &Address,
-                          PIC18F_FULL_IS &Instruction_Set )
+void assemble_Unknown(uint16_t value,
+                      Address_And_Checksum_t &Address,
+                      PIC18F_FULL_IS &Instruction_Set )
 {
     if(Address.lower_32_bits % 16 !=0)
     {
@@ -277,7 +283,7 @@ void  assemble_DB(std::string Assembly_Instruction,
         
         for(uint8_t index=0; index<value.size() ;index++)
         {
-            assemble_UnknownOrDB(value[index], Address, Instruction_Set );
+            assemble_Unknown(value[index], Address, Instruction_Set );
         }
         nextComma = Assembly_Instruction.find(",",nextComma+1);
         

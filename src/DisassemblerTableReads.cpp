@@ -90,7 +90,7 @@ void setTablePointerValue(uint8_t &value, uint16_t &valueToSet, std::string &Ass
     value = 0;
 }
 
-void trackTableReads(char *&command_for_prompt, Converted_Assembly_Code &OutputAssemblyCode,uint16_t n )
+void trackTableReads(char *command_for_prompt, Converted_Assembly_Code &OutputAssemblyCode,uint16_t n,PIC18F_FULL_IS &Instruction_Set )
 {
     static uint8_t previousMovlwValue = 0;
     static TABLE_READ_ADDR_t lastTBLRDAddr = {};
@@ -129,6 +129,7 @@ void trackTableReads(char *&command_for_prompt, Converted_Assembly_Code &OutputA
             previousMovlwValue = 0 ;
         }
     }
+    // TBLRD*, TBLRD*+,TBLRD+*, TBLLRD*-
     else if(Assembly_Instruction.find("TBLRD")!=std::string::npos)
     {
         // table has been read
@@ -159,7 +160,7 @@ void trackTableReads(char *&command_for_prompt, Converted_Assembly_Code &OutputA
          // movlw command; we will grab the value and wait for TBLPTR registers to be used
          // this is so we can determine if ascii data is being read from FLASH memory
 
-         size_t point2 =Assembly_Instruction.find("MOVLW") + strlen("MOVLW") + 1;
+         size_t point2 = Assembly_Instruction.find("MOVLW") + strlen("MOVLW") + 1;
          
          previousMovlwValue = strtol(Assembly_Instruction.substr(point2, Assembly_Instruction.size() - point2).c_str(), NULL, 16);
          

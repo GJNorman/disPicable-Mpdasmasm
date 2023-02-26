@@ -13,5 +13,10 @@
 #include <stdint.h>
 #include "PIC18_IS.h"
 #include "EQUs.hpp"
-bool disassemble_PIC18F_DoubleWord(uint16_t MachineCode_byte ,uint16_t MachineCode_byte2, std::string opcode_mnem, uint8_t CASE_TYPE, char*& command_for_prompt, uint64_t program_counter);
+bool disassemble_PIC18F_DoubleWord(uint16_t MachineCode_byte ,
+                                   uint16_t MachineCode_byte2,
+                                   PIC18F_FULL_IS &Instruction_Set,
+                                   char*& command_for_prompt,
+                                   size_t commandForPromptMaxSize,
+                                   uint64_t program_counter);
 #endif /* DisassembleDoubleWords_hpp */

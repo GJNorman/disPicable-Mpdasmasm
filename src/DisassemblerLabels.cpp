@@ -15,6 +15,11 @@ void addLabelsToAssemblyCode(Converted_Assembly_Code &OutputAssemblyCode)
 
 
 // add symbolic label to branching instruction
+// input - controlled format
+//      BRA 0x123
+// output
+//      BRA Label_0x123
+
 void addLabeltoBranchingInstruction(Converted_Assembly_Code &OutputAssemblyCode,        // full program being created
                                     const char *command_for_prompt,                     // currently constructed line
                                     const char *Branching_Command,                      // the instruction detected in the line

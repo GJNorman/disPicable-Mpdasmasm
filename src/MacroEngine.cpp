@@ -152,8 +152,6 @@ static void addIncludeDirectory(uint8_t type,const char* boundingCharacter, std:
 }
 void checkPreprocesseorDirectives(std::string &NextLine, size_t fileLine)
 {
-    //include_directory_t rt_ptr;
-
     if(debugMacros)
     {
         std::cout << "Checking directive: "<< NextLine << "\n";
@@ -218,7 +216,6 @@ void printUserMacros()
 // returns a filename if the directive is to include another file
 void createListOfUserMacros(std::vector<std::string> CODE_FULL_PROGRAM)
 {
-    std::string  rt_ptr ;
     size_t line_counter = 0;
     for(auto NextLine : CODE_FULL_PROGRAM)
     {

@@ -17,10 +17,10 @@
 void add_ORG_to_asm_file(uint32_t address,Converted_Assembly_Code &OutputAssemblyCode);
 
 
-void deal_with_non_program_data(std::vector<uint8_t> Data_bytes,
-                                const char *Tag,
-                                uint32_t address,
+void deal_with_non_program_data(std::vector<uint8_t> Data_bytes,                // input data
+                                const char *Tag,                                // name for datafield 'EEPROM', 'DEVICE' etc.
+                                uint32_t address,                               // program address
                                 uint16_t Address_Upper_16_bits,
-                                Converted_Assembly_Code &OutputAssemblyCode,
-                                bool include_address_line );
+                                Converted_Assembly_Code &OutputAssemblyCode,    // output file
+                                bool include_address_line ) ;                   // for first entry
 #endif /* DisassembleDirectives_hpp */

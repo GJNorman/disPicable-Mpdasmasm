@@ -14,11 +14,8 @@
 #include <vector>
 #include "AssemblerFilePreprocessing.hpp"
 #include "EQUs.hpp"
+#include "DisassemblerRamTracker.hpp"
 
-enum FuncionArgumentTypes{
-    literal = 0,
-    RAM = 1
-};
 
 typedef struct{
     uint8_t type;               // literal, RAM register etc.
@@ -26,17 +23,6 @@ typedef struct{
     std::string ArgumentName;
 }FunctionStack_t;
 
-typedef struct{
-    std::string Reg;
-    uint32_t address;    
-}RegistersTracker_t;
-
-typedef struct{
-    uint8_t value;          // literal value
-    uint8_t bank;           // ram bank of address
-    uint8_t type;           // literal or register
-    RegistersTracker_t REG; // for registers
-}WREG_Follower_t;
 
 
 typedef struct{
@@ -45,8 +31,15 @@ typedef struct{
 }ListOfFunctionCalls_t;
 
 
-void watchFunctionStacks(char* Instruction,Converted_Assembly_Code &OutputAssemblyCode);
-void HighlightFSRs(Converted_Assembly_Code &OutputAssemblyCode);
+// monitor the use of software stacks (POSTINC) etc, to create a list of registers used in each function
+void watchFunctionStacks(char* Instruction,Converted_Assembly_Code &OutputAssemblyCode,PIC18F_FULL_IS &Instruction_Set);
 
-std::string grabFSRList(int funcNum);
+// add a list of special function registers into the code
+void HighlightSFRs(Converted_Assembly_Code &OutputAssemblyCode);
+
+// get a list of Special function registers used inside a certain function
+std::string grabSFRList(int funcNum);
+
+// get a list of literal registers used inside a function
+std::string grabLiteralRegisterList(int funcNum);
 #endif /* DisassemblerFunctionStacks_hpp */

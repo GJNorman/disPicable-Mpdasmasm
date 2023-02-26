@@ -26,7 +26,7 @@ void initNumberSystemDecoder_t()
 {
     addNewBase(16,"0x",true);   // 0x37
     addNewBase(16,"h'",true);   // h'37
-   // addNewBase(16,"h",false);   // 37h
+   // addNewBase(16,"h",false);   // 37h TODO
     
     addNewBase(10,"0d",true);   // 0d37
     addNewBase(10,"d'",true);   // d'37
@@ -48,6 +48,7 @@ char *check_for_f_based_on_number_system(const char *Assembly_Instruction,Number
             // check points to start of number
             size_t p1 = Check-Assembly_Instruction;
             
+            // instruction with optional argument
             if(strstr(Assembly_Instruction+p1,","))
             {
                 f_prm = return_substring(Assembly_Instruction,decoder.nomenclature.c_str(), ",", 0,strlen(decoder.nomenclature.c_str()), 0);
@@ -125,7 +126,12 @@ uint32_t find_f_value_for_assembly(const char *Assembly_Instruction,PIC18F_FULL_
         }
         else
         {
-            f=convert_SFR_for_assembler(f_prm,Instruction_Set,0);
+            f=convert_highlow_directives_for_assembler(f_prm, Instruction_Set, 0);
+            
+            if(f==~0)   // ~0 indicates there was no high/low directive
+            {
+                f=convert_SFR_for_assembler(f_prm,Instruction_Set,0);
+            }
         }
 
     }
@@ -267,23 +273,35 @@ uint16_t check_if_SFR_or_RAW_REG(const char *REGISTER,PIC18F_FULL_IS & Instructi
     return value;
 }
 /*###################################################################################
+ Convert the following
  
+     movlw high(Hello)
+     movwf tblptrh
+     movlw low(Hello)
+     movwf tblptrl
+     
+     // somewhere else in the file
+     Hello  DB "HELLO"   ; @address 0x7ff0
+ 
+ into
+ 
+     movlw 0x7f
+     movwf tblptrh
+     movlw 0xf0
+     movwf tblptrl
  ###################################################################################*/
-uint32_t convert_SFR_for_assembler(const char *SFR_REG,PIC18F_FULL_IS & Instruction_Set, uint32_t offset)
+uint32_t convert_highlow_directives_for_assembler(const char *AddrLabel,PIC18F_FULL_IS & Instruction_Set, uint32_t offset)
 {
+    uint32_t f = 0;
     // remove leading white space
-    size_t p1=CheckForLeadingSpaces(SFR_REG,0);
-    
-    uint32_t f=0;
-    uint16_t counter=0;
-
+    size_t p1=CheckForLeadingSpaces(AddrLabel,0);
     // if a 'high()' or 'low()' directive has been used, we will find it here
     bool high = true;
-    const char *HIGH_LOW_DIRECTIVE = strstr(SFR_REG,"high(");
+    const char *HIGH_LOW_DIRECTIVE = strstr(AddrLabel,"high(");
     
     if(HIGH_LOW_DIRECTIVE == NULL)
     {
-        HIGH_LOW_DIRECTIVE = strstr(SFR_REG,"low(");
+        HIGH_LOW_DIRECTIVE = strstr(AddrLabel,"low(");
         if(HIGH_LOW_DIRECTIVE!=NULL)
         {
             HIGH_LOW_DIRECTIVE = &HIGH_LOW_DIRECTIVE[strlen("low(")];
@@ -313,11 +331,11 @@ uint32_t convert_SFR_for_assembler(const char *SFR_REG,PIC18F_FULL_IS & Instruct
             snprintf(search_term_db,search_term_size+1, "%s",HIGH_LOW_DIRECTIVE);
             std::cout<<search_term_db<<"\n";
             // we'll check if its a tag for a DB
-            for( counter =0; counter < Instruction_Set.Define_Byte_Tags.size();counter++)
+            for( uint16_t counter=0; counter < Instruction_Set.Define_Byte_Tags.size();counter++)
             {
                 if(strlen(search_term_db) == (Instruction_Set.Define_Byte_Tags[counter].size()))
                 {
-                    if(strncasecmp(search_term_db,Instruction_Set.Define_Byte_Tags[counter].c_str(),strlen(&SFR_REG[p1]))==0)
+                    if(strncasecmp(search_term_db,Instruction_Set.Define_Byte_Tags[counter].c_str(),strlen(&AddrLabel[p1]))==0)
                     {
                         f = (Instruction_Set.Define_byte_tag_positions[counter]>>bitshift_value)&0xff;
                         
@@ -327,9 +345,23 @@ uint32_t convert_SFR_for_assembler(const char *SFR_REG,PIC18F_FULL_IS & Instruct
             }
         }
         //no point continuing if there was no match found
-        printf ("Unable to identify db tag '%.s' \n",&SFR_REG[p1]);
+        printf ("Unable to identify db tag '%.s' \n",&AddrLabel[p1]);
         return f;
     }
+    
+    return ~0;
+}
+/*###################################################################################
+ Convert an SFR (i.e. ADCON1) into a memory address '0x7f0'
+ ###################################################################################*/
+uint32_t convert_SFR_for_assembler(const char *SFR_REG,PIC18F_FULL_IS & Instruction_Set, uint32_t offset)
+{
+    // remove leading white space
+    size_t p1=CheckForLeadingSpaces(SFR_REG,0);
+    
+    uint32_t f=0;
+    uint16_t counter=0;
+
     // compare to the list of MCU registers and user variables
     std::string temp = &SFR_REG[p1];
     uint32_t temp_f = processEQUforAssembler(temp);
