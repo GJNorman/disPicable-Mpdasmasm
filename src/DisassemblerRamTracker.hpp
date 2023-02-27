@@ -12,7 +12,7 @@
 #include <vector>
 #include <stdint.h>
 #include "PIC18_IS.h"
-
+#include "EQUs.hpp"
 typedef struct{
     std::string Reg;                // for holding special function registers (ADCON1 etc.)
     uint32_t address;               // and the function address
@@ -27,25 +27,38 @@ typedef struct{
     RegistersTracker_t REG; // for registers moved to WREG
 }WREG_Follower_t;
 
-enum FuncionArgumentTypes
+typedef WREG_Follower_t RAM_Follower_t;
+enum FunctionArgumentTypes
 {
     literal = 0,
     RAM = 1
 };
 
+
+typedef struct{
+    uint8_t NEGATIVE;
+    uint8_t OVERFLOW;
+    uint8_t ZERO;
+    uint8_t DIGIT_CARRY;
+    uint8_t CARRY;
+}STATUS_t;
 class RAMTracker
 {
     inline static WREG_Follower_t Shadow_WREG;
     inline static size_t NumberOfRamBanks;
-    inline static std::vector<std::vector<uint8_t>> Contents;
+    inline static std::vector<std::vector<RAM_Follower_t>> Contents;
     inline static uint8_t currentBank;
+    inline static STATUS_t STATUS;
     
-    enum accessBank{
-        ACCESS_BANK = 255
-    };
+    static void trackRegFromFDACommand(char *Instruction,PIC18F_FULL_IS &Instruction_Set,RAM_Follower_t *Output);
+    static void trackRegFromFACommand(char *Instruction,PIC18F_FULL_IS &Instruction_Set);
+    static void trackRegFromLITERALCommand(char *Instruction,PIC18F_FULL_IS &Instruction_Set);
     static void trackWREG(char *Instruction,PIC18F_FULL_IS &Instruction_Set);
     static void trackRamBank(char *Instruction,PIC18F_FULL_IS &Instruction_Set);
 public:
+    enum accessBank{
+        ACCESS_BANK = 255
+    };
     // allocate space for each ram bank
     static void initRamTracker();
 
@@ -56,8 +69,8 @@ public:
     static void setRam(uint8_t address, uint8_t bank, uint8_t value);
     static void setRam(uint16_t address, uint8_t value);
     
-    static uint8_t getRam(uint8_t address, uint8_t bank);
-    static uint8_t getRam(uint16_t address);
+    static RAM_Follower_t *getRam(uint8_t address, uint8_t bank);
+    static RAM_Follower_t *getRam(uint16_t address);
     static uint8_t getCurrentBank();
     // to be handled during file preprocessing only
     static void incrementRamBanksTotal();

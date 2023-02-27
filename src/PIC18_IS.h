@@ -166,9 +166,9 @@ public:
     uint8_t destinationBit;     // for F,d,a commands; records current value of 'd'
     uint8_t currentBank;        // for any command using 'a' parameter, keep track of wheterh command use access or GPR banks
     uint8_t currentBSR;         // current value of bank select register
-    uint8_t currentFile;        // current command file
+    uint16_t currentFile;       // current command file
     uint8_t currentBit;         // current bits used in a bit-based command
-    
+    uint8_t currentCommandCase; // F,d,a   F,a etc etc
     // for movff only
     uint16_t MOVFFs;            // most recent MOVFF source
     uint16_t MOVFFd;            // most recent MOVFF destination

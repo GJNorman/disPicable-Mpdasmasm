@@ -23,10 +23,6 @@ void disassemble_PIC18f_SingleWord(uint16_t MachineCode_byte,
 
     find_opcode_parameters(MachineCode_byte,d, a, f, 0b10,0b1,0xff, 1,Access_or_bank_RAM);
 
-    Instruction_Set.currentBank = a;
-    Instruction_Set.destinationBit = d;
-    Instruction_Set.currentFile = f;
-    
     char f_stand_in[50];
     
     snprintf(f_stand_in,sizeof(f_stand_in),"0x%x",f);
@@ -38,7 +34,7 @@ void disassemble_PIC18f_SingleWord(uint16_t MachineCode_byte,
             
             if(f>0x5f)  // address indicates special function registers
             {
-                f+=0xf00;
+                f+= getSFRAccessBankOffset();   // add the address offset required for SFR register mapped to the access bank
                 f = f & 0xffff;
                 std::string RegisterName = processEQUforDisassembler(f, 0xff);
 
@@ -55,6 +51,9 @@ void disassemble_PIC18f_SingleWord(uint16_t MachineCode_byte,
         }
 
     }
+    Instruction_Set.currentBank = a;
+    Instruction_Set.destinationBit = d;
+    Instruction_Set.currentFile = f;
 
     // parameters for various pic instructions
     int32_t n =0;           // parameter in branching instructions

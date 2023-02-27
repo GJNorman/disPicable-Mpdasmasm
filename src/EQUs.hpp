@@ -32,6 +32,11 @@ std::string getMostRecentEQU();
 // grab the second most recently found EQU, needed for MOVFF instructions
 std::string getSecondMostRecentEQU();
 
+// and their addresses
+uint16_t getAddressOfsecondMostRecentEQU();
+
+uint16_t getAddressOfMostRecentEQU();
+
 void clearMostRecentEQU();
 
 // reset vector
@@ -55,5 +60,15 @@ std::string processEQUforDisassembler(uint32_t regAddress, uint32_t mask);
 std::string findEQUBitForDisassembler(int bitNum);
 // std::cout EQU_list_t vector
 void printEQUs();
+
+// SFR bank is calculated using equ's from the header file
+// this is an offset for SFR registers mapped to the access bank only
+uint16_t getSFRAccessBankOffset();
+
+// SFRs can use more than one bank
+// this function will return the highest, this is so that memory can be allocated for RAM tracking
+uint16_t getHighestSFRBank();
+
+
 
 #endif /* EQUs_hpp */

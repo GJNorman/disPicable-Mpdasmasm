@@ -11,10 +11,12 @@
 static std::vector<EQU_list_t> EQU_List;
 std::string MostRecentEQU;                  // the last EQU found in the list from either the disassembler or assembler
 std::string secondMostRecentEQU;            // we need this because of MOVFF instructions, otherwise we will only record the second file
-
+uint16_t AddressOfMostRecentEQU;
+uint16_t AddressOfsecondMostRecentEQU;
 static size_t LastAccessEquOffset = 0;      // records vector position of MostRecentEQU
 
-
+uint16_t SFR_BANK = ~0;
+uint16_t SFR_Highest_Bank = 0;
 std::string getMostRecentEQU()
 {
     return MostRecentEQU;
@@ -22,6 +24,14 @@ std::string getMostRecentEQU()
 std::string getSecondMostRecentEQU()
 {
     return secondMostRecentEQU;
+}
+uint16_t getAddressOfsecondMostRecentEQU()
+{
+    return AddressOfsecondMostRecentEQU;
+}
+uint16_t getAddressOfMostRecentEQU()
+{
+    return AddressOfMostRecentEQU;
 }
 void clearMostRecentEQU()
 {
@@ -31,6 +41,15 @@ void clearMostRecentEQU()
 void clearEQU()
 {
     EQU_List.clear();
+}
+
+uint16_t getSFRAccessBankOffset()
+{
+    return SFR_BANK << 8;
+}
+uint16_t getHighestSFRBank()
+{
+    return SFR_Highest_Bank ;
 }
 // for debugging
 void printEQUs()
@@ -108,6 +127,22 @@ void addNewEQU(std::string Assembly_Instruction)
         if(NewEntry.Tag.find("_POSN") == std::string::npos)  // _POSN indicates bitfield position
         {
             EQU_List.push_back(NewEntry);
+            
+            if(NewEntry.Tag.find("_") == std::string::npos)
+            {
+                uint16_t addr = strtol(NewEntry.Address.c_str(),NULL,16);
+                
+                addr>>=8;    // remove lower 8 bits
+               
+                if((addr!=0)&&( addr < SFR_BANK))
+                {
+                    SFR_BANK = addr;
+                }
+                if(addr>SFR_Highest_Bank)
+                {
+                    SFR_Highest_Bank = addr;
+                }
+            }
         }
         else
         {
@@ -133,6 +168,11 @@ std::string processEQUforDisassembler(uint32_t regAddress, uint32_t mask)
     char temp[10];
     
     snprintf(temp,sizeof(temp),"0x%x",regAddress&mask);
+    
+    //  save equ data
+    AddressOfsecondMostRecentEQU = AddressOfMostRecentEQU;
+    AddressOfMostRecentEQU = (uint16_t) regAddress ;
+    
     secondMostRecentEQU = MostRecentEQU;
     MostRecentEQU = temp;
     LastAccessEquOffset = 0;
@@ -188,8 +228,11 @@ uint32_t processEQUforAssembler(std::string RegisterName)
             {
                 secondMostRecentEQU = MostRecentEQU;
                 MostRecentEQU = Equis.Tag;
+                
                 //replace with the register ID
                 uint32_t address = strtol(Equis.Address.c_str(),NULL,16) &0xffffff;
+                AddressOfsecondMostRecentEQU = AddressOfMostRecentEQU;
+                AddressOfMostRecentEQU = (uint16_t) address ;
                 return address;
             }
         }

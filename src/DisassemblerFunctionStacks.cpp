@@ -132,6 +132,8 @@ static void trackStackLoading(char*Instruction,PIC18F_FULL_IS &Instruction_Set)
         
         newStack.type = Shadow_WREG->type;
         
+        newStack.value = Shadow_WREG->value;
+        
         if( Shadow_WREG->type == literal)
         {
             newStack.value = Shadow_WREG->value;
@@ -157,7 +159,7 @@ static void trackStackLoading(char*Instruction,PIC18F_FULL_IS &Instruction_Set)
             temp[point2-point1] = 0;
             
             newStack.ArgumentName = temp;
-            newStack.type = FuncionArgumentTypes::RAM;
+            newStack.type = FunctionArgumentTypes::RAM;
         }
         else if(Instruction_Set.currentCommand == PIC18F_IS::PIC_COMMANDS::SETF)     // set file, file = ~0
         {
@@ -194,7 +196,7 @@ static void handleFunctionCall(char *Instruction, Converted_Assembly_Code &Outpu
         }
         else
         {
-            snprintf(&COMMENT[strlen(COMMENT)], sizeof(COMMENT) - strlen(COMMENT), "REG = '%s'",it.ArgumentName.c_str());
+            snprintf(&COMMENT[strlen(COMMENT)], sizeof(COMMENT) - strlen(COMMENT), "REG = '%s' (%.2X)",it.ArgumentName.c_str(),it.value);
         }
     }
     snprintf(&COMMENT[strlen(COMMENT)], sizeof(COMMENT) - strlen(COMMENT), "%s", "}");
