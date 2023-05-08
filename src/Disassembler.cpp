@@ -45,7 +45,7 @@ void Disassemble(const char *hexFile,                   // input .hex file
     
     std::vector<unsigned char> hexFileContents;                 // holds contents of input file (".hex")
     
-    Copy_FIRMWARE_FILE_to_Buffer(hexFile,hexFileContents);
+    CopyFileToBuffer(hexFile,hexFileContents,std::ios::binary);
     
     Converted_Assembly_Code OutputAssemblyCode;                 // holds contents of output file (".asm")
     

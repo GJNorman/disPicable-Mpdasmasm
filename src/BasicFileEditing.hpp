@@ -16,8 +16,9 @@
 
 std::string remove_tabs(std::string next_line);
 char* delete_all_the_stupid_carriage_returns(const char *input_file);
-void Copy_FIRMWARE_FILE_to_Buffer(const char *Input_File_dir,std::vector<unsigned char> &OutputFileContents);
-char *copy_file_to_buffer(const char *inputfiledir);
+void CopyBufferToFile(const char *Input_File_dir,std::vector<unsigned char> &OutputFileContents);
+void CopyFileToBuffer(const char *Input_File_dir,std::vector<unsigned char> &OutputFileContents,std::ios_base::openmode mode);
+
 bool check_if_line_is_empty(std::string line_from_file);
 
 bool  check_data_bytes(char &data);

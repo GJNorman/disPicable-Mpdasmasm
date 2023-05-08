@@ -60,10 +60,16 @@ void check_for_escape_characters(uint8_t &counter, char *&data_bytes)
     }
 }
 
-// copies binary file contents into ram Buffer
-void Copy_FIRMWARE_FILE_to_Buffer(const char *Input_File_dir,std::vector<unsigned char> &OutputFileContents)
+void CopyBufferToFile(const char *Input_File_dir,std::vector<unsigned char> &OutputFileContents)
 {
-    std::ifstream input( Input_File_dir, std::ios::binary );
+    std::ofstream output_file(Input_File_dir);
+    for (const auto &e : OutputFileContents) output_file << e ;
+}
+// copies binary file contents into ram Buffer
+void CopyFileToBuffer(const char *Input_File_dir,std::vector<unsigned char> &OutputFileContents,std::ios_base::openmode mode)
+{
+    //std::ios::binary
+    std::ifstream input( Input_File_dir,mode);
 
     if(!input)
     {
@@ -78,25 +84,6 @@ void Copy_FIRMWARE_FILE_to_Buffer(const char *Input_File_dir,std::vector<unsigne
 
 }
 
-char *copy_file_to_buffer(const char *inputfiledir)
-{
-    FILE *fp = fopen(inputfiledir,"rb");
-    if(!fp)
-    {
-        printf("File not found: %s\n",inputfiledir);
-        return NULL;
-    }
-    fseek(fp, 0, SEEK_END);
-    uint64_t file_size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-    char *ASM_BUFFER = (char*)calloc(sizeof(char),file_size*2+1);
-
-    fread(ASM_BUFFER,sizeof(char) , file_size, fp);
-
-    fclose(fp);
-
-    return ASM_BUFFER;
-}
 char *copy_out_substring(size_t p1, size_t p2, const char* parent)
 {
     char *temp = (char*)malloc(sizeof(char) * (p2-p1+1));
@@ -168,12 +155,8 @@ char* return_substring(const char *parent_String,
 // takes one character and replces it with another. There is no realloc in this function, so strings must be the same size
 void removeCharacters(const char *CharacterToRemove, const char *ReplacementCharacter, char *buffer)
 {
-    if(strlen(CharacterToRemove) != strlen(ReplacementCharacter))
-    {
-        std::cout << "removeCharacters() requires two equal length string to function correctly, we have: '"<<CharacterToRemove <<"' and: '"<<ReplacementCharacter <<"'\n" ;
-        return;
-    }
     char *NextCarriage = strstr(buffer,CharacterToRemove);
+    int counter=0;
     while(NextCarriage!= NULL)
     {
         size_t p1 = NextCarriage-buffer;
@@ -182,7 +165,22 @@ void removeCharacters(const char *CharacterToRemove, const char *ReplacementChar
             buffer[p1+index] =ReplacementCharacter[index];
 
         NextCarriage = strstr(&buffer[p1],CharacterToRemove);
+        
+        counter++;
        
+    }
+    std::cout << "we removed: " << counter << "\n";
+}
+void removeCharacters(const char CharacterToRemove, const char ReplacementCharacter, std::vector<unsigned char> &buffer)
+{
+    
+    for(size_t index=0 ; index< buffer.size(); ++index)
+    {
+        if(buffer[index] == CharacterToRemove)
+        {
+            buffer[index] = ReplacementCharacter;
+        }
+        
     }
 }
 
@@ -193,23 +191,23 @@ char* delete_all_the_stupid_carriage_returns(const char *input_file)
     size_t temp_file_name_length =strlen(input_file)+strlen("temp_____") + 1;
     char *temp_file=(char*)malloc(sizeof(char)*(temp_file_name_length));
         
-    char *buffer = copy_file_to_buffer(input_file);
+   // char *buffer = copy_file_to_buffer(input_file);
 
-    if(buffer!=NULL)
+    std::vector<unsigned char> buffer;
+    CopyFileToBuffer(input_file, buffer, std::ifstream::in);
+    if(buffer.size()!=0)
     {
         char *main_name = return_substring(input_file, NULL, ".", 0,0, 0);
         
         if(main_name!=NULL)
         {
             snprintf(temp_file,temp_file_name_length,"%s_temp.txt",main_name);
-            FILE * fp = fopen( temp_file,"wb");
 
-            removeCharacters("\r"," ",buffer);    
-            removeCharacters("\t"," ",buffer);
+            removeCharacters('\r',' ',buffer);
+            removeCharacters('\t',' ',buffer);
 
-            fprintf(fp,"%s\n",buffer);
+            CopyBufferToFile(temp_file,buffer);
 
-            fclose(fp);
             free(main_name);
         }
 
